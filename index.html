@@ -1315,8 +1315,9 @@
        글자(잉크) 크기·굵기·색·정렬을 읽어 근사치로 맞춘다.
        - 배경: 테두리 평균(mean) 대신 가장 많은 배경 무리(mode)의 중앙값 → 글자·테두리·
          안티앨리어싱이 섞여 회색으로 탁해지는 현상을 막는다.
-       - 크기: 박스 높이가 아니라 실제 잉크(글자 획) 높이를 재서 폰트 크기를 역산한다.
-       - 박스는 잉크 바운딩 박스에 딱 맞춰 잡아 원본 글자 잔상(1~3px)이 남지 않게 한다. */
+       - 크기: 박스 높이가 아니라 박스 '안쪽' 실제 잉크(글자 획) 높이를 재서 폰트 크기를 역산한다.
+       - 좌표: 사용자가 드래그한 박스(x, y, w, h)는 절대 확장·이동하지 않는다. 읽기 전용.
+         (박스를 잉크에 맞춰 늘리면 옆·아래 글자를 덮어 뭉개는 회귀가 있었다.) */
     const STYLE_WEIGHTS = ['400', '500', '600', '700', '800'];
     let _styleCanvas = null;
     let _styleCtx = null;
@@ -1419,8 +1420,10 @@
       };
     }
 
-    /* 원본 이미지에서 박스 주변 배경색을 무리(mode)로 뽑는다 (테두리·그림자·글자 제외) */
-    function estimateBackgroundFor(slide, box) {
+    /* 원본 이미지에서 박스 주변 배경색을 무리(mode)로 뽑는다 (테두리·그림자·글자 제외)
+       baseColor: 박스 안쪽 배경 무리색 — 주변 테두리가 카드 경계·아이콘에 걸렸을 때도
+       박스가 놓인 실제 배경색을 기준으로 삼기 위해 넘긴다. */
+    function estimateBackgroundFor(slide, box, baseColor = null) {
       const pad = clamp(Math.round(Math.max(4, box.h * 0.25)), 4, 10);
       const sx = clamp(Math.round(box.x) - pad, 0, slide.width - 1);
       const sy = clamp(Math.round(box.y) - pad, 0, slide.height - 1);
@@ -1448,7 +1451,7 @@
         }
       }
 
-      const bg = modeColorOf(ringPix);
+      const bg = baseColor || modeColorOf(ringPix);
       let gradientType = 'solid';
       let gradStart = rgbToHex(...bg);
       let gradEnd = gradStart;
@@ -1461,11 +1464,15 @@
       /* 좌우/상하 배경색이 실제로 다르면(옅은 그라데이션 포함) 그라데이션으로 채워
          채운 영역이 주변과 끊기지 않게 한다. 박스는 글자에 딱 맞춰져 있어
          카드 경계를 넘는 넓은 박스에서 생기던 가짜 그라데이션은 생기지 않는다. */
-      if (vDiff > 9 && vDiff >= hDiff) {
+      /* 그라데이션 판정은 '테두리 무리색이 전체 배경 무리색과 가까운데 위/아래(좌/우)만
+         서로 다른' 경우로 제한한다. 질감·노이즈·이웃 글자가 섞여 생기는 가짜 그라데이션
+         (박스 전체가 회색으로 덮이는 원인)을 막기 위해서다. */
+      const nearBg = (c) => colorDistOf(c, bg) < 14;
+      if (vDiff >= 12 && vDiff >= hDiff && nearBg(topC) && nearBg(bottomC)) {
         gradientType = 'vertical';
         gradStart = rgbToHex(...topC);
         gradEnd = rgbToHex(...bottomC);
-      } else if (hDiff > 9 && hDiff > vDiff) {
+      } else if (hDiff >= 12 && hDiff > vDiff && nearBg(leftC) && nearBg(rightC)) {
         gradientType = 'horizontal';
         gradStart = rgbToHex(...leftC);
         gradEnd = rgbToHex(...rightC);
@@ -1473,180 +1480,330 @@
       return { bgColor: rgbToHex(...bg), gradientType, gradStart, gradEnd, bgLum: lumOf(...bg) };
     }
 
-    /* 박스를 원본 글자 잉크에 딱 맞추고, 폰트 크기·굵기·색·정렬을 근사치로 맞춘다 */
+    /* 박스 '안쪽' 픽셀만으로 글자(잉크)를 찾는다 — 박스 밖은 절대 보지 않는다.
+       - 배경 기준은 박스 안에서 가장 많은 색 무리(mode) → 옅은 그라데이션·질감에 강하다.
+       - 명도차(46)·색차(62)가 충분히 큰 픽셀만 잉크로 인정 → 연회색 배경, JPEG 노이즈,
+         화면 질감 같은 미세한 차이는 잉크로 잡히지 않는다.
+       - 이웃 8칸 중 2칸 이상이 잉크인 픽셀만 남겨 점 노이즈를 지운다. */
+    function measureInkInsideBox(slide, box) {
+      const sx = clamp(Math.round(box.x), 0, Math.max(0, slide.width - 1));
+      const sy = clamp(Math.round(box.y), 0, Math.max(0, slide.height - 1));
+      const sw = clamp(Math.round(box.w), 1, slide.width - sx);
+      const sh = clamp(Math.round(box.h), 1, slide.height - sy);
+      const reg = readSlideRegion(slide, sx, sy, sw, sh);
+      const n = reg.w * reg.h;
+      const all = [];
+      for (let i = 0; i < reg.data.length; i += 4) all.push([reg.data[i], reg.data[i + 1], reg.data[i + 2]]);
+      const bg = modeColorOf(all);
+      const bgLum = lumOf(bg[0], bg[1], bg[2]);
+      /* 배경 무리가 박스 안에서 차지하는 비율과 그 평균색 — 너무 낮으면(글자가 대부분)
+         배경으로 못 쓴다. 평균색은 질감·노이즈가 있는 배경에서도 채움색이 주변과
+         이어지게 한다(무리 대표색 하나로 칠하면 미세하게 다른 띠가 보였다). */
+      let bgLike = 0, bgR = 0, bgG = 0, bgB = 0;
+      for (let i = 0; i < reg.data.length; i += 4) {
+        if (Math.hypot(reg.data[i] - bg[0], reg.data[i + 1] - bg[1], reg.data[i + 2] - bg[2]) < 18) {
+          bgLike++;
+          bgR += reg.data[i]; bgG += reg.data[i + 1]; bgB += reg.data[i + 2];
+        }
+      }
+      const bgShare = n ? bgLike / n : 0;
+      const bgMean = bgLike ? [bgR / bgLike, bgG / bgLike, bgB / bgLike] : bg;
+
+      const GATE_LUM = 46;
+      const GATE_COLOR = 62;
+      const raw = new Uint8Array(n);
+      for (let i = 0, p = 0; i < reg.data.length; i += 4, p++) {
+        const r = reg.data[i], g = reg.data[i + 1], b = reg.data[i + 2];
+        if (Math.abs(lumOf(r, g, b) - bgLum) > GATE_LUM
+            || Math.hypot(r - bg[0], g - bg[1], b - bg[2]) > GATE_COLOR) raw[p] = 1;
+      }
+
+      const mask = new Uint8Array(n);
+      let count = 0;
+      let minX = reg.w, maxX = -1, minY = reg.h, maxY = -1;
+      const rowInk = new Array(reg.h).fill(0);
+      for (let y = 0; y < reg.h; y++) {
+        for (let x = 0; x < reg.w; x++) {
+          const p = y * reg.w + x;
+          if (!raw[p]) continue;
+          let nb = 0;
+          for (let dy = -1; dy <= 1 && nb < 2; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              if (!dx && !dy) continue;
+              const yy = y + dy, xx = x + dx;
+              if (yy < 0 || yy >= reg.h || xx < 0 || xx >= reg.w) continue;
+              if (raw[yy * reg.w + xx]) nb++;
+            }
+          }
+          if (nb < 2) continue;
+          mask[p] = 1;
+          count++;
+          rowInk[y]++;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+
+      /* 줄(행) 무리 — 잉크가 거의 없는 행이 이어지면 한 줄이 끝난 것으로 본다.
+         기준선은 행 잉크의 최대치에 비례시킨다(고정 2픽셀은 안티앨리어싱 잔여물에
+         줄이 붙어버려 두 줄을 한 줄로 오인했다). */
+      const rowPeak = (() => {
+        const sorted = rowInk.slice().sort((a, b) => a - b);
+        return sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.9))] || 0;
+      })();
+      const minRowInk = Math.max(2, Math.round(reg.w * 0.008), Math.round(rowPeak * 0.16));
+      const bands = [];
+      let cur = null;
+      let blankRun = 0;
+      for (let y = 0; y < reg.h; y++) {
+        if (rowInk[y] >= minRowInk) {
+          if (!cur) cur = { top: y, bottom: y, ink: 0 };
+          cur.bottom = y;
+          cur.ink += rowInk[y];
+          blankRun = 0;
+        } else if (cur && rowInk[y] < minRowInk * 0.5) {
+          if (++blankRun >= 2) {
+            if (cur.bottom - cur.top >= 1) bands.push(cur);
+            cur = null;
+            blankRun = 0;
+          }
+        } else {
+          /* minRowInk*0.5 ~ minRowInk 사이의 행은 같은 줄의 일부(가는 획)로 본다 */
+          blankRun = 0;
+        }
+      }
+      if (cur && cur.bottom - cur.top >= 1) bands.push(cur);
+
+      return { reg, sx, sy, mask, bg, bgMean, bgLum, bgShare, count, minX, maxX, minY, maxY,
+               bands: bands.filter(b => b.ink >= 3) };
+    }
+
+    /* 원본 스타일 근사치 — ⚠️ 박스 좌표(x, y, w, h)는 절대 바꾸지 않는다.
+       사용자가 드래그한 점선 영역이 곧 수정 범위이므로, 이 함수는 그 영역 안쪽의
+       배경색·글자색·글자 크기·굵기·정렬만 읽는다. (좌표 확장·이동 금지)
+       글자 크기는 원본 잉크 높이·줄 간격에서 역산한 값을 시작점으로, 그 영역 안에
+       자연스럽게 들어가는 가장 큰 크기를 고른다 → 옆·아래 글자를 침범하지 않는다. */
+    /* 배경 채움 영역 — 박스는 그대로 두고, 채움만 '배경색과 같은 영역'까지만 칠한다.
+       AI가 준 박스가 카드 경계를 넘어 배경(그라데이션) 위까지 걸치면 흰 사각형이
+       카드 밖으로 삐져나온 것처럼 보이기 때문이다.
+       가장자리 줄의 '중앙값' 색이 배경색과 다를 때만 안쪽으로 줄여 나가므로,
+       글자가 가장자리에 닿은 꽉 찬 박스(중앙값이 배경색)는 그대로 채운다. */
+    function computeFillRect(slide, box, bgColor, inkBounds = null) {
+      const bx = clamp(Math.round(box.x), 0, slide.width - 1);
+      const by = clamp(Math.round(box.y), 0, slide.height - 1);
+      const bw = clamp(Math.round(box.w), 1, slide.width - bx);
+      const bh = clamp(Math.round(box.h), 1, slide.height - by);
+      const reg = readSlideRegion(slide, bx, by, bw, bh);
+      const bg = hexToRgb(bgColor);
+      const medOf = (pixels) => {
+        const arr = pixels.slice().sort((a, b) => lumOf(a[0], a[1], a[2]) - lumOf(b[0], b[1], b[2]));
+        return arr[Math.floor(arr.length / 2)] || [0, 0, 0];
+      };
+      /* 그 줄에 글자(잉크)가 거의 없을 때만 줄일 수 있다 — 글자를 덮어야 하므로 */
+      const noInkLine = (pixels, med) => {
+        let ink = 0;
+        for (const c of pixels) if (Math.abs(lumOf(c[0], c[1], c[2]) - lumOf(med[0], med[1], med[2])) > 45) ink++;
+        return ink <= Math.max(1, Math.round(pixels.length * 0.03));
+      };
+      const rowOf = (y) => {
+        const arr = [];
+        for (let x = 0; x < reg.w; x++) {
+          const i = (y * reg.w + x) * 4;
+          arr.push([reg.data[i], reg.data[i + 1], reg.data[i + 2]]);
+        }
+        return arr;
+      };
+      const colOf = (x) => {
+        const arr = [];
+        for (let y = 0; y < reg.h; y++) {
+          const i = (y * reg.w + x) * 4;
+          arr.push([reg.data[i], reg.data[i + 1], reg.data[i + 2]]);
+        }
+        return arr;
+      };
+      const check = (pixels) => {
+        const med = medOf(pixels);
+        return colorDistOf(med, bg) > 18 && noInkLine(pixels, med);
+      };
+      const maxCutX = Math.floor(reg.w * 0.25);
+      const maxCutY = Math.floor(reg.h * 0.25);
+      let top = 0, bottom = reg.h - 1, left = 0, right = reg.w - 1;
+      while (top < maxCutY && check(rowOf(top))) top++;
+      while (bottom > reg.h - 1 - maxCutY && bottom > top && check(rowOf(bottom))) bottom--;
+      while (left < maxCutX && check(colOf(left))) left++;
+      while (right > reg.w - 1 - maxCutX && right > left && check(colOf(right))) right--;
+
+      let fx1 = bx + left, fy1 = by + top;
+      let fx2 = bx + right, fy2 = by + bottom;
+      /* 원본 글자(잉크)는 반드시 덮어야 한다 — 채움 영역이 잉크를 자르면 원본 획이 남는다 */
+      if (inkBounds) {
+        fx1 = Math.min(fx1, inkBounds.x1 - 2);
+        fy1 = Math.min(fy1, inkBounds.y1 - 2);
+        fx2 = Math.max(fx2, inkBounds.x2 + 2);
+        fy2 = Math.max(fy2, inkBounds.y2 + 2);
+      }
+      fx1 = clamp(fx1, bx, bx + bw - 1);
+      fy1 = clamp(fy1, by, by + bh - 1);
+      fx2 = clamp(fx2, fx1, bx + bw - 1);
+      fy2 = clamp(fy2, fy1, by + bh - 1);
+      if (fx2 - fx1 + 1 < bw * 0.3 || fy2 - fy1 + 1 < bh * 0.3) return { x: bx, y: by, w: bw, h: bh };
+      return { x: fx1, y: fy1, w: fx2 - fx1 + 1, h: fy2 - fy1 + 1 };
+    }
+
     function estimateBoxStyleFromCanvas(box, slide = getCurrentSlide()) {
       if (!box || !slide) return box;
-      const bgInfo = estimateBackgroundFor(slide, box);
+      const keep = { x: box.x, y: box.y, w: box.w, h: box.h };
+      const boxW = Math.max(8, keep.w);
+      const boxH = Math.max(8, keep.h);
+
+      /* 1) 글자 잉크 — 박스 안쪽만 */
+      const ink = measureInkInsideBox(slide, box);
+      const text = String(box.text || '').trim();
+
+      /* 2) 배경 — 박스 바로 바깥 테두리의 무리(mode) 색을 쓰되,
+            박스 안쪽 배경 무리가 충분히 많으면(테두리가 카드 경계·아이콘에 걸린 경우)
+            그 색을 기준으로 삼아 회색 띠가 생기지 않게 한다. */
+      const bgInfo = estimateBackgroundFor(slide, box, ink.bgShare >= 0.2 ? ink.bgMean : null);
       box.bgColor = bgInfo.bgColor;
       box.gradientType = bgInfo.gradientType;
       box.gradStart = bgInfo.gradStart;
       box.gradEnd = bgInfo.gradEnd;
       box.bgMode = 'auto';
+      box.bgRect = computeFillRect(slide, box, bgInfo.bgColor,
+        ink.count ? { x1: ink.sx + ink.minX, x2: ink.sx + ink.maxX, y1: ink.sy + ink.minY, y2: ink.sy + ink.maxY } : null);
+      const bands = ink.bands;
+      const hasInk = ink.count >= Math.max(10, Math.round(boxW * boxH * 0.0015)) && bands.length > 0;
 
-      /* 주어진 여유(px)만큼 넓힌 창에서 잉크(글자) 픽셀을 찾는다 */
-      const measureRegion = (winPx) => {
-        const sx = clamp(Math.round(box.x) - winPx, 0, slide.width - 1);
-        const sy = clamp(Math.round(box.y) - winPx, 0, slide.height - 1);
-        const sw = clamp(Math.round(box.w) + winPx * 2, 1, slide.width - sx);
-        const sh = clamp(Math.round(box.h) + winPx * 2, 1, slide.height - sy);
-        const reg = readSlideRegion(slide, sx, sy, sw, sh);
-        const all = [];
-        for (let i = 0; i < reg.data.length; i += 4) all.push([reg.data[i], reg.data[i + 1], reg.data[i + 2]]);
-        const bgLum = lumOf(...modeColorOf(all));
-        const mask = new Uint8Array(reg.w * reg.h);
-        let inkCount = 0, minX = reg.w, maxX = -1, minY = reg.h, maxY = -1;
-        for (let y = 0; y < reg.h; y++) {
-          for (let x = 0; x < reg.w; x++) {
-            const i = (y * reg.w + x) * 4;
-            if (Math.abs(lumOf(reg.data[i], reg.data[i + 1], reg.data[i + 2]) - bgLum) > 40) {
-              mask[y * reg.w + x] = 1;
-              inkCount++;
-              if (x < minX) minX = x;
-              if (x > maxX) maxX = x;
-              if (y < minY) minY = y;
-              if (y > maxY) maxY = y;
-            }
-          }
-        }
-        return { sx, sy, reg, mask, bgLum, inkCount, minX, maxX, minY, maxY };
-      };
+      box.padding = 2;
+      box.radius = 0;
+      box.vAlign = 'middle';
+      box.x = keep.x; box.y = keep.y; box.w = keep.w; box.h = keep.h;
 
-      const win = clamp(Math.round(Math.max(5, box.h * 0.32)), 5, 12);
-      let measured = measureRegion(win);
-      /* 잉크가 탐색 창 경계에 닿았다면 글자가 잘린 것 → 여유를 넓혀 한 번 더 잰다
-         (사용자가 글자 일부만 덮게 드래그해도 실제 글자 높이를 얻기 위해) */
-      if (measured.inkCount >= 12 && (measured.minX <= 1 || measured.minY <= 1
-          || measured.maxX >= measured.reg.w - 2 || measured.maxY >= measured.reg.h - 2)) {
-        const wider = measureRegion(clamp(Math.round(Math.max(win * 2.5, 16)), 12, 44));
-        if (wider.inkCount >= 12) measured = wider;
+      /* 글자가 없거나 잉크를 못 찾으면 박스 높이만으로 무난한 크기를 잡는다 */
+      if (!text || !hasInk) {
+        box.fontSize = clamp(Math.round(boxH * 0.62), 9, 120);
+        box.lineHeight = 1.25;
+        return box;
       }
-      const { sx, sy, reg, mask, bgLum, inkCount, minX, maxX, minY, maxY } = measured;
 
-      /* 글자가 거의 없으면 사용자가 잡은 영역을 그대로 두고 배경만 보정한다 */
-      if (inkCount < 12 || maxX < minX || maxY < minY) return box;
-
-      /* 줄(행) 무리로 나눠 한 줄의 잉크 높이·줄 간격을 잰다 */
-      const rowInk = new Array(reg.h).fill(0);
-      for (let y = 0; y < reg.h; y++) {
-        let c = 0;
-        for (let x = 0; x < reg.w; x++) if (mask[y * reg.w + x]) c++;
-        rowInk[y] = c;
-      }
-      const bands = [];
-      let cur = null;
-      for (let y = 0; y < reg.h; y++) {
-        if (rowInk[y] >= 2) {
-          if (!cur) cur = { top: y, bottom: y };
-          else cur.bottom = y;
-        } else if (cur) {
-          if (cur.bottom - cur.top >= 2) bands.push(cur);
-          cur = null;
-        }
-      }
-      if (cur && cur.bottom - cur.top >= 2) bands.push(cur);
-      const lineBands = bands.length ? bands : [{ top: minY, bottom: maxY }];
-      const bandHeights = lineBands.map(b => b.bottom - b.top + 1).sort((a, b) => a - b);
-      const targetInkH = bandHeights[Math.floor(bandHeights.length / 2)];
-      let bandPitch = 0;
-      if (lineBands.length > 1) {
+      const lineCount = Math.max(1, bands.length);
+      const heights = bands.map(b => b.bottom - b.top + 1).sort((a, b) => a - b);
+      const inkLineH = heights[Math.floor(heights.length / 2)];
+      let pitch = 0;
+      if (bands.length > 1) {
         const gaps = [];
-        for (let i = 1; i < lineBands.length; i++) gaps.push(lineBands[i].top - lineBands[i - 1].top);
+        for (let i = 1; i < bands.length; i++) gaps.push(bands[i].top - bands[i - 1].top);
         gaps.sort((a, b) => a - b);
-        bandPitch = gaps[Math.floor(gaps.length / 2)];
+        pitch = Math.max(0, gaps[Math.floor(gaps.length / 2)]);
       }
 
-      /* 박스 = 실제 글자 잉크 영역 + 여유 (원본 글자가 가장자리로 삐져나오지 않게) */
-      const inkX = sx + minX;
-      const inkY = sy + minY;
-      const inkW = maxX - minX + 1;
-      const inkHpx = maxY - minY + 1;
+      const firstLine = text.split('\n')[0].slice(0, 80) || text;
 
-      const text = String(box.text || '').trim();
-      const bgHex = bgInfo.bgColor;
-
-      /* 글자 크기: 잉크 높이를 재서 같은 높이가 나오는 폰트 크기를 역산 */
-      let size = clamp(Math.round(inkHpx * 1.05), 10, 160);
-      if (text) {
-        const probe = measureRenderedInk(text, 100, box.fontWeight || '700', bgHex);
-        if (probe.inkH > 1) {
-          const guess = targetInkH * 100 / probe.inkH;
-          let bestSize = clamp(Math.round(guess), 10, 160);
-          let bestDiff = Infinity;
-          for (let s = Math.max(8, bestSize - 3); s <= Math.min(170, bestSize + 3); s++) {
-            const m = measureRenderedInk(text, s, box.fontWeight || '700', bgHex);
-            const diff = Math.abs(m.inkH - targetInkH);
-            if (diff < bestDiff) { bestDiff = diff; bestSize = s; }
+      /* 3) 글자 굵기 — 첫 줄 잉크 밀도를 후보 굵기와 비교 */
+      let obsDensity = 0;
+      {
+        const b0 = bands[0];
+        let bw1 = ink.reg.w, bw2 = -1, bc = 0;
+        for (let y = b0.top; y <= b0.bottom; y++) {
+          for (let x = 0; x < ink.reg.w; x++) {
+            if (!ink.mask[y * ink.reg.w + x]) continue;
+            bc++;
+            if (x < bw1) bw1 = x;
+            if (x > bw2) bw2 = x;
           }
-          size = bestSize;
         }
+        const bh = b0.bottom - b0.top + 1;
+        obsDensity = bw2 >= bw1 && bh ? bc / ((bw2 - bw1 + 1) * bh) : 0;
+      }
+      let bestWeight = '700';
+      let bestWeightDiff = Infinity;
+      for (const w of STYLE_WEIGHTS) {
+        const m = measureRenderedInk(firstLine, 40, w, bgInfo.bgColor);
+        const diff = Math.abs(m.density - obsDensity);
+        if (diff < bestWeightDiff) { bestWeightDiff = diff; bestWeight = w; }
+      }
+      box.fontWeight = bestWeight;
 
-        /* 글자 굵기: 같은 크기에서 렌더한 잉크 밀도와 원본 잉크 밀도를 비교 */
-        const sample = text.split('\n')[0].slice(0, 40) || text;
-        const obsDensity = (() => {
-          let c = 0;
-          for (let y = lineBands[0].top; y <= lineBands[0].bottom; y++) {
-            for (let x = 0; x < reg.w; x++) if (mask[y * reg.w + x]) c++;
-          }
-          const firstRowInk = (() => {
-            let a = reg.w, b = -1;
-            for (let y = lineBands[0].top; y <= lineBands[0].bottom; y++) {
-              for (let x = 0; x < reg.w; x++) if (mask[y * reg.w + x]) { if (x < a) a = x; if (x > b) b = x; }
-            }
-            return b >= a ? b - a + 1 : 0;
-          })();
-          const hh = lineBands[0].bottom - lineBands[0].top + 1;
-          return firstRowInk && hh ? c / (firstRowInk * hh) : 0;
-        })();
-        let bestWeight = '700';
-        let bestWeightDiff = Infinity;
-        for (const w of STYLE_WEIGHTS) {
-          const m = measureRenderedInk(sample, size, w, bgHex);
-          const diff = Math.abs(m.density - obsDensity);
-          if (diff < bestWeightDiff) { bestWeightDiff = diff; bestWeight = w; }
-        }
-        box.fontWeight = bestWeight;
+      /* 4) 글자 크기 — 잉크 한 줄 높이(주) + 줄 간격(보조)으로 역산 */
+      const probe = measureRenderedInk(firstLine, 100, bestWeight, bgInfo.bgColor);
+      const ratio = probe.inkH > 1 ? probe.inkH / 100 : 0.95;
+      let size0 = inkLineH / ratio;
+      if (pitch > 0) size0 = size0 * 0.68 + (pitch / 1.34) * 0.32;
+      size0 = clamp(size0, Math.max(8, (boxH / lineCount) * 0.5), Math.min(240, (boxH / lineCount) * 1.4));
 
-        /* 글자 색: 배경과 대비가 가장 큰(진한) 잉크 픽셀의 대표색 */
+      /* 5) 줄 간격 — 원본 줄 간격을 되살린다 (박스 안에 들어가는 범위) */
+      let lh = pitch > 0 ? clamp(pitch / size0, 1.05, 1.75) : clamp(boxH / lineCount / size0, 1.05, 1.6);
+      lh = +lh.toFixed(2);
+
+      /* 6) 박스 안에 들어가는 가장 큰 크기 — 원본보다 커지지 않는다.
+         줄 수를 늘려 글자를 작게 만드는 대신, 원본과 같은 줄 수를 유지하며
+         줄 간격을 조금 좁혀 크기를 지킨다.
+         안쪽 폭·여유는 렌더와 똑같이 쓴다 (렌더는 box.w - 6, 위 3px 여유)
+         — 줄바꿈이 어긋나면 박스 밖으로 글자가 삐져나간다. */
+      const innerW = Math.max(10, boxW - 6);
+      const availH = Math.max(6, boxH - 3);
+      const wrapAt = (s) => {
+        _styleCtx.font = buildFontString({ ...box, fontSize: s }, s);
+        return wrapTextLines(_styleCtx, text, innerW, box.letterSpacing || 0);
+      };
+      const startSize = clamp(Math.round(size0), 9, 240);
+      /* 추정한 원본 크기의 68% 아래로는 줄이지 않는다 → 글자가 비정상적으로 작아지지 않음.
+         (넘치는 부분은 렌더 단계에서 박스 안으로 잘라 옆 글자를 덮지 않는다) */
+      const floorSize = Math.max(9, Math.round(startSize * 0.68));
+      let size = startSize;
+      let usedLh = lh;
+      let solved = false;
+      /* 1순위: 원본과 같은 줄 수를 유지하면서 박스에 들어가는 가장 큰 크기 */
+      for (let s = startSize; s >= floorSize && !solved; s--) {
+        const lines = wrapAt(s).length;
+        if (lines > lineCount) continue;
+        const needH = lines * s * lh;
+        if (needH <= availH + 0.5) { size = s; usedLh = lh; solved = true; break; }
+        const squeeze = availH / Math.max(1, lines * s);
+        if (squeeze >= 1.05) { size = s; usedLh = Math.min(lh, squeeze); solved = true; break; }
+      }
+      /* 2순위: 줄 수가 조금 늘어도 박스에 들어가는 크기 (하한까지만) */
+      for (let s = startSize; s >= floorSize && !solved; s--) {
+        const lines = wrapAt(s).length;
+        if (lines * s * lh <= availH + 0.5) { size = s; usedLh = lh; solved = true; break; }
+      }
+      if (!solved) {
+        size = floorSize;
+        usedLh = lh;
+      }
+
+      /* 7) 글자 색 — 배경과 대비가 가장 큰 잉크 픽셀의 대표색 */
+      {
         const inkPix = [];
-        for (let y = minY; y <= maxY; y++) {
-          for (let x = minX; x <= maxX; x++) {
-            if (!mask[y * reg.w + x]) continue;
-            const i = (y * reg.w + x) * 4;
-            const r = reg.data[i], g = reg.data[i + 1], b = reg.data[i + 2];
-            inkPix.push([r, g, b, Math.abs(lumOf(r, g, b) - bgLum)]);
+        for (let y = ink.minY; y <= ink.maxY; y++) {
+          for (let x = ink.minX; x <= ink.maxX; x++) {
+            if (!ink.mask[y * ink.reg.w + x]) continue;
+            const i = (y * ink.reg.w + x) * 4;
+            const r = ink.reg.data[i], g = ink.reg.data[i + 1], b = ink.reg.data[i + 2];
+            inkPix.push([r, g, b, Math.hypot(r - ink.bg[0], g - ink.bg[1], b - ink.bg[2])]);
           }
         }
-        inkPix.sort((a, b) => b[3] - a[3]);
-        const top = inkPix.slice(0, Math.max(1, Math.floor(inkPix.length * 0.2)));
-        const avgInk = top.reduce((a, c) => [a[0] + c[0], a[1] + c[1], a[2] + c[2]], [0, 0, 0]);
-        box.textColor = rgbToHex(avgInk[0] / top.length, avgInk[1] / top.length, avgInk[2] / top.length);
-      }
-
-      /* 렌더 위치 보정값 (textBaseline='top'에서 잉크가 시작하는 오프셋) */
-      let dx = 0, dy = 0;
-      if (text) {
-        const m = measureRenderedInk(text, size, box.fontWeight || '700', bgHex);
-        dx = Math.max(0, m.dx);
-        dy = Math.max(0, m.dy);
-        /* 복원된 글자가 원본보다 길면, 한 줄 넘침이 생기지 않게 크기를 줄인다 */
-        const availW = inkW + Math.max(8, Math.round(inkW * 0.12)) + 6;
-        let guard = 0;
-        while (size > 10 && guard++ < 80) {
-          const mm = measureRenderedInk(text, size, box.fontWeight || '700', bgHex);
-          const wrapped = wrapTextLines(_styleCtx, text, availW, 0);
-          const fitsH = wrapped.length * size * 1.25 <= inkHpx + targetInkH * 0.6;
-          if (mm.inkW <= availW && fitsH) break;
-          size -= 1;
+        if (inkPix.length) {
+          inkPix.sort((a, b) => b[3] - a[3]);
+          const top = inkPix.slice(0, Math.max(1, Math.floor(inkPix.length * 0.2)));
+          const sum = top.reduce((a, c) => [a[0] + c[0], a[1] + c[1], a[2] + c[2]], [0, 0, 0]);
+          box.textColor = rgbToHex(sum[0] / top.length, sum[1] / top.length, sum[2] / top.length);
         }
       }
 
-      /* 정렬: 여러 줄의 가운데가 맞고 줄마다 폭이 다르면 가운데 정렬로 본다 */
+      /* 8) 정렬 — 여러 줄의 가운데가 맞고 줄마다 폭이 다르면 가운데 정렬 */
       let align = 'left';
-      if (lineBands.length > 1) {
-        const extents = lineBands.map(b => {
-          let a = reg.w, z = -1;
+      if (bands.length > 1 && text.split('\n').length > 1) {
+        const extents = bands.map(b => {
+          let a = ink.reg.w, z = -1;
           for (let y = b.top; y <= b.bottom; y++) {
-            for (let x = 0; x < reg.w; x++) if (mask[y * reg.w + x]) { if (x < a) a = x; if (x > z) z = x; }
+            for (let x = 0; x < ink.reg.w; x++) {
+              if (!ink.mask[y * ink.reg.w + x]) continue;
+              if (x < a) a = x;
+              if (x > z) z = x;
+            }
           }
           return { center: (a + z) / 2, width: z - a + 1 };
         });
@@ -1654,32 +1811,16 @@
         const widths = extents.map(e => e.width);
         const centerSpread = Math.max(...centers) - Math.min(...centers);
         const widthSpread = Math.max(...widths) - Math.min(...widths);
+        const inkW = ink.maxX - ink.minX + 1;
         if (centerSpread <= Math.max(3, inkW * 0.06) && widthSpread > 6) align = 'center';
       }
 
       box.fontSize = size;
       box.align = align;
-      box.vAlign = 'top';
-      box.padding = 2;
-      box.radius = 0;
-      box.lineHeight = bandPitch > 0 ? clamp(+(bandPitch / Math.max(1, size)).toFixed(2), 1.0, 1.9) : 1.25;
+      box.lineHeight = +usedLh.toFixed(2);
 
-      /* 박스 위치: 글자가 원본 잉크 자리에 정확히 놓이도록 역산 */
-      box.x = clamp(Math.round(inkX - dx - 3), 0, Math.max(0, slide.width - 8));
-      box.y = clamp(Math.round(inkY - dy - 3), 0, Math.max(0, slide.height - 8));
-      /* 실제 렌더 폭(advance width)으로 박스 폭을 잡아야 한 줄이 다음 줄로 넘어가지 않는다 */
-      const renderW = text ? Math.ceil(measureRenderedInk(text, size, box.fontWeight || '700', bgHex).width) : 0;
-      const needW = Math.max(inkW + 6 + dx, renderW + 6 + dx);
-      box.w = clamp(Math.max(needW, 12), 8, slide.width - box.x);
-      box.h = clamp(Math.round(inkHpx + dy + 3 + Math.max(2, Math.round(targetInkH * 0.1))), 10, slide.height - box.y);
-
-      /* 최종 박스 기준으로 배경을 다시 잰다 (AI가 준 넓은 박스의 바깥 배경이 섞이지 않게) */
-      const finalBg = estimateBackgroundFor(slide, box);
-      box.bgColor = finalBg.bgColor;
-      box.gradientType = finalBg.gradientType;
-      box.gradStart = finalBg.gradStart;
-      box.gradEnd = finalBg.gradEnd;
-
+      /* 9) 좌표는 처음 그대로 — 어떤 경우에도 확장·이동하지 않는다 */
+      box.x = keep.x; box.y = keep.y; box.w = keep.w; box.h = keep.h;
       return box;
     }
 
@@ -1774,10 +1915,12 @@
         if (box.hidden) continue;
 
         const pad = box.padding ?? 2;
-        const bx = box.x - pad;
-        const by = box.y - pad;
-        const bw = box.w + pad * 2;
-        const bh = box.h + pad * 2;
+        /* 배경은 박스와 똑같이(추정 실패 시) 또는 배경색과 같은 영역(bgRect)까지만 채운다 */
+        const fill = box.bgRect || null;
+        const bx = (fill ? fill.x : box.x) - pad;
+        const by = (fill ? fill.y : box.y) - pad;
+        const bw = (fill ? fill.w : box.w) + pad * 2;
+        const bh = (fill ? fill.h : box.h) + pad * 2;
 
         // 1. Background Fill
         if (box.bgMode !== 'transparent') {
@@ -1803,6 +1946,11 @@
         // 2. Text Rendering
         if (box.text) {
           targetCtx.save();
+          /* 글자가 박스를 넘칠 때(OCR이 원본보다 긴 텍스트를 돌려준 경우 등) 옆·아래
+             원본 글자를 덮어 뭉개지 않도록 박스 안에서만 그린다. */
+          targetCtx.beginPath();
+          targetCtx.rect(box.x - 1, box.y - 1, box.w + 2, box.h + 2);
+          targetCtx.clip();
           targetCtx.font = buildFontString(box);
           targetCtx.fillStyle = box.textColor || '#1e293b';
           targetCtx.textBaseline = 'top';
@@ -2051,7 +2199,10 @@
     // ==================== GEMINI AI VISION & OCR RESTORATION ====================
     function getCroppedRegionBase64(slide, box) {
       const scale = 2;
-      const pad = 8;
+      /* 여유는 글자 끝 안티앨리어싱만 덮을 만큼만 준다. 8px로 넓히면 바로 아래 줄까지
+         잘려 들어가 OCR 결과에 다른 줄이 섞이고, 그 긴 텍스트를 박스에 맞추느라
+         글자 크기가 작아지는 문제가 있었다. */
+      const pad = 4;
       const sx = clamp(Math.floor(box.x - pad), 0, slide.width - 1);
       const sy = clamp(Math.floor(box.y - pad), 0, slide.height - 1);
       const sw = clamp(Math.ceil(box.w + pad * 2), 1, slide.width - sx);
@@ -2869,16 +3020,11 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
     function clearBoxContent(box, slide = getCurrentSlide()) {
       if (!slide || !box) return;
       pushUndoState(slide);
-      /* 지우기 전에 실제 글자 잉크에 박스를 맞추고 배경색을 무리(mode)로 다시 뽑는다
-         → 원본 글자 획이 1px도 남지 않고, 주변 카드 배경과 같은 색으로 덮인다 */
-      estimateBoxStyleFromCanvas(box, slide);
-      const sampled = estimateBackgroundFor(slide, box);
+      /* 지우기 전에 박스 안쪽 글자 잉크를 읽어 배경색과 채움 영역을 정한다
+         → 원본 글자 획이 1px도 남지 않고, 주변 카드 배경과 같은 색으로 덮인다.
+         (박스 좌표는 건드리지 않는다) */
       box.text = '';
-      box.bgMode = 'auto';
-      box.bgColor = sampled.bgColor;
-      box.gradientType = sampled.gradientType;
-      box.gradStart = sampled.gradStart;
-      box.gradEnd = sampled.gradEnd;
+      estimateBoxStyleFromCanvas(box, slide);
       box.padding = Math.max(box.padding ?? 2, 3);
       box.radius = 0;
       box.aiMeta = null;
@@ -3494,6 +3640,7 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
           if (inter.moved) {
             box.x = Math.round(clamp(inter.origBox.x + dx, 0, slide.width - box.w));
             box.y = Math.round(clamp(inter.origBox.y + dy, 0, slide.height - box.h));
+            box.bgRect = null; // 위치가 바뀌면 배경 채움 영역도 다시 계산해야 한다
             renderCanvas();
           }
         } else if (inter.type === 'resize') {
@@ -3529,6 +3676,7 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
             box.y = Math.round(ny);
             box.w = Math.round(nw);
             box.h = Math.round(nh);
+            box.bgRect = null;
             renderCanvas();
           }
         }
