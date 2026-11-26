@@ -1,0 +1,3186 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SlideFix Pro — 노트북LM 슬라이드·인포그래픽 글자 수정 에디터</title>
+
+  <meta name="description" content="노트북LM 슬라이드·인포그래픽에서 깨진 한글(□, ?) 영역을 드래그해 AI로 복원하는 무설치 웹 에디터. PDF·이미지 불러오기, 오프라인 OCR, 고화질 내보내기까지." />
+  <meta name="author" content="SlideFix Pro" />
+  <meta name="theme-color" content="#0d1017" />
+
+  <!-- 파비콘 (inline SVG data URI — 외부 파일 없이 단독 배포) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366f1'/%3E%3Cstop offset='1' stop-color='%237c3aed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='27' font-weight='700' fill='%23ffffff' text-anchor='middle'%3ESF%3C/text%3E%3C/svg%3E" />
+  <link rel="shortcut icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366f1'/%3E%3Cstop offset='1' stop-color='%237c3aed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Helvetica,Arial,sans-serif' font-size='27' font-weight='700' fill='%23ffffff' text-anchor='middle'%3ESF%3C/text%3E%3C/svg%3E" />
+
+  <!-- Open Graph / Twitter 카드 (링크 공유 미리보기) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="SlideFix Pro" />
+  <meta property="og:locale" content="ko_KR" />
+  <meta property="og:title" content="SlideFix Pro — 노트북LM 슬라이드·인포그래픽 글자 수정 에디터" />
+  <meta property="og:description" content="노트북LM 슬라이드·인포그래픽에서 깨진 한글(□, ?) 영역을 드래그해 AI로 복원하는 무설치 웹 에디터. PDF·이미지 불러오기, 오프라인 OCR, 고화질 내보내기까지." />
+  <meta property="og:image" content="og-image.png" />
+  <meta property="og:image:width" content="2400" />
+  <meta property="og:image:height" content="1260" />
+  <meta property="og:image:alt" content="SlideFix Pro — 깨진 한글 복원 에디터" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="SlideFix Pro — 노트북LM 슬라이드·인포그래픽 글자 수정 에디터" />
+  <meta name="twitter:description" content="노트북LM 슬라이드·인포그래픽에서 깨진 한글(□, ?) 영역을 드래그해 AI로 복원하는 무설치 웹 에디터. PDF·이미지 불러오기, 오프라인 OCR, 고화질 내보내기까지." />
+  <meta name="twitter:image" content="og-image.png" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', 'Inter', 'Noto Sans KR', 'sans-serif'],
+          },
+          colors: {
+            studio: {
+              bg: '#0d1017',
+              panel: '#151923',
+              card: '#1c2230',
+              border: '#272f42',
+              accent: '#6366f1',
+              accentHover: '#4f46e5',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Korean Web Fonts -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Gowun+Dodum&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Jua&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- PDF.js & jsPDF & Tesseract.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    #appShell {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #workspaceRow {
+      display: flex;
+      flex: 1 1 0%;
+      min-height: 0;
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #centerColumn {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 0%;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #stageContainer {
+      flex: 1 1 0%;
+      min-height: 0;
+      overflow: auto;
+      position: relative;
+      z-index: 10;
+    }
+
+    #bottomControlBar {
+      position: relative;
+      z-index: 40;
+      flex-shrink: 0;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.28); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.48); }
+
+    .canvas-stage-bg {
+      background-image: radial-gradient(rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .dark .canvas-stage-bg {
+      background-image: radial-gradient(rgba(148, 163, 184, 0.12) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    .no-select {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    input[type="range"] {
+      accent-color: #6366f1;
+    }
+
+    #mainCanvas {
+      touch-action: none;
+      display: block;
+    }
+
+    /* ✋ 이동(패닝) 모드 — 캔버스에서 손가락·마우스 스크롤 허용 */
+    #mainCanvas.mode-pan {
+      touch-action: pan-x pan-y;
+      cursor: grab;
+    }
+    #mainCanvas.mode-pan:active {
+      cursor: grabbing;
+    }
+
+    /* 하단 조작 바 — 선택 / 이동 모드 토글 */
+    .canvas-mode-btn {
+      color: #64748b;
+      white-space: nowrap;
+    }
+    .canvas-mode-btn.is-active {
+      background: #ffffff;
+      color: #4f46e5;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.10);
+    }
+    .dark .canvas-mode-btn.is-active {
+      background: #334155;
+      color: #c7d2fe;
+    }
+
+    /* 좁은 화면에서 하단 바가 두 줄로 자연스럽게 접히도록 */
+    @media (max-width: 420px) {
+      #bottomControlBar { padding-left: 6px; padding-right: 6px; }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 text-slate-900 dark:bg-studio-bg dark:text-slate-100 font-sans">
+  <div id="appShell">
+
+    <!-- ==================== TOP HEADER TOOLBAR ==================== -->
+    <header class="h-14 shrink-0 bg-white dark:bg-studio-panel border-b border-slate-200 dark:border-studio-border px-2 sm:px-4 flex items-center justify-between gap-1.5 sm:gap-2 z-50 whitespace-nowrap">
+      <!-- Left: Brand & File Controls -->
+      <div class="flex items-center gap-1 sm:gap-2.5 min-w-0 shrink-0">
+        <button id="btnToggleLeftPanel" type="button" class="lg:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-studio-card text-slate-600 dark:text-slate-300" title="슬라이드·레이어 목록">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+
+        <div class="flex items-center gap-2 shrink-0">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+            SF
+          </div>
+          <div class="hidden sm:block">
+            <div class="flex items-center gap-1.5">
+              <span class="font-bold text-sm tracking-tight">SlideFix Pro</span>
+              <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-indigo-500/15 text-indigo-500 dark:text-indigo-400">AI</span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-none">노트북LM 깨진 한글 복원 에디터</p>
+          </div>
+        </div>
+
+        <div class="h-5 w-px bg-slate-200 dark:bg-studio-border mx-0.5 hidden sm:block"></div>
+
+        <!-- Open File Button -->
+        <label for="fileInput" class="cursor-pointer inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition shrink-0 whitespace-nowrap">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          <span class="hidden sm:inline">파일 열기</span>
+          <span class="sm:hidden">파일</span>
+        </label>
+        <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" multiple class="hidden" />
+
+        <!-- Close Project Button (Always visible on all screen sizes) -->
+        <button id="btnCloseProject" type="button" class="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-studio-border bg-slate-50 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 dark:bg-studio-card dark:hover:bg-rose-500/15 dark:hover:text-rose-400 dark:hover:border-rose-500/30 text-xs font-medium transition shrink-0" title="현재 작업 닫기">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          <span class="hidden sm:inline">작업 닫기</span>
+          <span class="sm:hidden">닫기</span>
+        </button>
+      </div>
+
+      <!-- Center: Undo/Redo & Compare -->
+      <div class="flex items-center gap-0.5 sm:gap-1.5 shrink-0">
+        <button id="btnUndo" type="button" disabled class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-studio-card disabled:opacity-35 disabled:pointer-events-none transition" title="실행 취소 (Ctrl+Z)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+        </button>
+        <button id="btnRedo" type="button" disabled class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-studio-card disabled:opacity-35 disabled:pointer-events-none transition" title="다시 실행 (Ctrl+Y)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6"/></svg>
+        </button>
+
+        <div class="h-5 w-px bg-slate-200 dark:bg-studio-border mx-0.5 hidden md:block"></div>
+
+        <button id="btnCompareOriginal" type="button" class="hidden sm:inline-flex no-select items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-studio-border bg-slate-50 hover:bg-slate-100 dark:bg-studio-card dark:hover:bg-slate-800 text-xs font-medium transition" title="누르고 있으면 원본 표시 (Space)">
+          <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          <span class="hidden md:inline">원본 비교</span>
+        </button>
+      </div>
+
+      <!-- Right: Project JSON, Export, Theme, Inspector Toggle -->
+      <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+        <button id="btnOpenKeyModal" type="button" class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-studio-border bg-white dark:bg-studio-card hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium transition shrink-0" title="Gemini API 키 등록 (선택) · 없으면 오프라인 OCR로 동작합니다" aria-haspopup="dialog">
+          <span aria-hidden="true">🔑</span>
+          <span class="hidden md:inline">AI 키</span>
+          <span id="aiKeyDot" class="w-1.5 h-1.5 rounded-full bg-slate-400" aria-hidden="true"></span>
+        </button>
+
+        <!-- Project Save/Load Dropdown -->
+        <div class="relative hidden sm:block">
+          <button id="btnProjectMenu" type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-studio-border bg-white dark:bg-studio-card hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium transition">
+            <span>프로젝트</span>
+            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div id="projectDropdown" class="hidden absolute right-0 mt-1.5 w-44 rounded-xl bg-white dark:bg-studio-panel border border-slate-200 dark:border-studio-border shadow-xl py-1.5 z-50">
+            <button id="btnSaveJson" type="button" class="w-full text-left px-3.5 py-2 text-xs hover:bg-slate-100 dark:hover:bg-studio-card flex items-center gap-2">
+              <span>작업 파일 저장 (.json)</span>
+            </button>
+            <label for="jsonInput" class="cursor-pointer w-full text-left px-3.5 py-2 text-xs hover:bg-slate-100 dark:hover:bg-studio-card flex items-center gap-2">
+              <span>작업 파일 불러오기</span>
+            </label>
+            <input id="jsonInput" type="file" accept="application/json,.json" class="hidden" />
+          </div>
+        </div>
+
+        <!-- Export Dropdown -->
+        <div class="relative">
+          <button id="btnExportMenu" type="button" class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-sm transition whitespace-nowrap" aria-label="내보내기">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span class="hidden sm:inline">내보내기</span>
+          </button>
+          <div id="exportDropdown" class="hidden absolute right-0 mt-1.5 w-52 rounded-xl bg-white dark:bg-studio-panel border border-slate-200 dark:border-studio-border shadow-xl py-1.5 z-50">
+            <button id="btnExportPng" type="button" class="w-full text-left px-3.5 py-2 text-xs hover:bg-slate-100 dark:hover:bg-studio-card flex items-center justify-between">
+              <span class="font-medium">현재 슬라이드 PNG</span>
+              <span class="text-[10px] text-slate-400">고화질</span>
+            </button>
+            <button id="btnExportJpg" type="button" class="w-full text-left px-3.5 py-2 text-xs hover:bg-slate-100 dark:hover:bg-studio-card flex items-center justify-between">
+              <span class="font-medium">현재 슬라이드 JPG</span>
+              <span class="text-[10px] text-slate-400">경량</span>
+            </button>
+            <div class="my-1 border-t border-slate-200 dark:border-studio-border"></div>
+            <button id="btnExportPdf" type="button" class="w-full text-left px-3.5 py-2 text-xs hover:bg-slate-100 dark:hover:bg-studio-card flex items-center justify-between text-indigo-600 dark:text-indigo-400 font-semibold">
+              <span>전체 슬라이드 PDF</span>
+              <span class="text-[10px]">다중 페이지</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button id="btnToggleTheme" type="button" class="hidden sm:inline-flex p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-studio-card text-slate-600 dark:text-slate-300 transition" title="라이트/다크 모드 전환">
+          <svg id="iconSun" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+          <svg id="iconMoon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+        </button>
+
+        <!-- Mobile Right Inspector Toggle -->
+        <button id="btnToggleRightPanel" type="button" class="xl:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-studio-card text-slate-600 dark:text-slate-300" title="텍스트 편집 속성" aria-label="텍스트 편집 속성 열기">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- ==================== MAIN WORKSPACE ROW ==================== -->
+    <div id="workspaceRow">
+
+      <!-- LEFT SIDEBAR: Slides & Layers -->
+      <aside id="leftSidebar" class="fixed lg:static inset-y-14 left-0 z-40 w-64 shrink-0 bg-white dark:bg-studio-panel border-r border-slate-200 dark:border-studio-border flex flex-col transform -translate-x-full lg:translate-x-0 transition-transform duration-200">
+        <!-- Slides Section -->
+        <div class="p-3 border-b border-slate-200 dark:border-studio-border flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">슬라이드 (<span id="slideCountLabel">0</span>)</span>
+          <label for="fileInput" class="cursor-pointer text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">+ 페이지 추가</label>
+        </div>
+        <div id="slideListContainer" class="flex-1 overflow-y-auto p-2.5 space-y-2 min-h-[120px]">
+          <!-- Slide thumbnails rendered here -->
+        </div>
+
+        <!-- Layers Section -->
+        <div class="border-t border-slate-200 dark:border-studio-border flex flex-col max-h-[45%]">
+          <div class="p-3 pb-2 flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">수정 레이어 (<span id="layerCountLabel">0</span>)</span>
+            <span class="text-[10px] text-slate-400">개별 선택·삭제</span>
+          </div>
+          <div id="layerListContainer" class="flex-1 overflow-y-auto px-2.5 pb-2 space-y-1">
+            <!-- Layer items rendered here -->
+          </div>
+        </div>
+
+        <!-- Auto Scan Entire Slide Button -->
+        <div class="p-3 border-t border-slate-200 dark:border-studio-border bg-slate-50/70 dark:bg-studio-card/50">
+          <button id="btnAutoScanSlide" type="button" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-semibold shadow-sm flex items-center justify-center gap-1.5 transition">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+            <span>AI 깨진 글자 자동 탐지·복원</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- CENTER COLUMN: Stage + Bottom Control Bar -->
+      <main id="centerColumn">
+        <!-- Scrollable Canvas Stage -->
+        <div id="stageContainer" class="canvas-stage-bg p-4 sm:p-6">
+          <!-- Welcome Dropzone (Shown when no slides are open) -->
+          <div id="welcomeDropzone" class="hidden h-full w-full flex items-center justify-center">
+            <div class="max-w-md w-full rounded-2xl bg-white dark:bg-studio-panel border-2 border-dashed border-slate-300 dark:border-studio-border p-8 text-center shadow-lg">
+              <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-indigo-500/15 text-indigo-500 flex items-center justify-center">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              </div>
+              <h2 class="text-base font-bold mb-1.5">노트북LM 슬라이드 또는 PDF 불러오기</h2>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+                깨진 한글(□, ?)이 포함된 PNG, JPG, WebP 이미지나<br/>다중 페이지 PDF 파일을 드래그하거나 선택하세요.
+              </p>
+              <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+                <label for="fileInput" class="cursor-pointer w-full sm:w-auto px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
+                  파일 선택하기
+                </label>
+                <button id="btnLoadSample" type="button" class="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 dark:border-studio-border bg-slate-50 hover:bg-slate-100 dark:bg-studio-card dark:hover:bg-slate-800 text-xs font-semibold transition">
+                  샘플 슬라이드 불러오기
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Canvas Centering Wrapper -->
+          <div id="canvasOuterFlex" class="min-w-full min-h-full flex items-center justify-center">
+            <div id="canvasWrapper" class="relative shadow-2xl rounded-sm overflow-visible bg-white">
+              <canvas id="mainCanvas"></canvas>
+
+              <!-- Floating Quick Action Bar for Selected Box -->
+              <div id="floatingQuickBar" class="hidden absolute -top-11 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 text-white px-2 py-1 rounded-xl shadow-lg border border-slate-700 flex items-center gap-1 whitespace-nowrap">
+                <button id="fbAiFix" type="button" class="px-2 py-1 rounded-lg hover:bg-indigo-600 text-[11px] font-semibold flex items-center gap-1 transition" title="선택 영역 AI 문맥 복원">
+                  <span>AI 복원</span>
+                </button>
+                <button id="fbAutoFit" type="button" class="px-2 py-1 rounded-lg hover:bg-slate-700 text-[11px] font-medium transition" title="박스 크기에 글자 자동 맞춤">
+                  <span>자동맞춤</span>
+                </button>
+                <button id="fbClear" type="button" class="px-2 py-1 rounded-lg hover:bg-amber-600 text-[11px] font-medium transition" title="글자를 비우고 주변 배경색으로 깔끔하게 덮기 (워터마크 제거)">
+                  <span>🧹 지우기</span>
+                </button>
+                <button id="fbDuplicate" type="button" class="px-2 py-1 rounded-lg hover:bg-slate-700 text-[11px] font-medium transition" title="레이어 복제">
+                  <span>복제</span>
+                </button>
+                <div class="w-px h-3.5 bg-slate-700 mx-0.5"></div>
+                <button id="fbDelete" type="button" class="px-2 py-1 rounded-lg hover:bg-rose-600 text-rose-300 hover:text-white text-[11px] font-semibold transition" title="선택 영역만 삭제 (Delete)">
+                  <span>삭제</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DEDICATED BOTTOM CONTROL BAR (Always clickable in normal & full-screen) -->
+        <footer id="bottomControlBar" class="min-h-12 bg-white dark:bg-studio-panel border-t border-slate-200 dark:border-studio-border px-2 sm:px-4 py-1.5 flex flex-wrap items-center justify-between gap-1.5 sm:gap-2 select-none">
+          <!-- Left: Canvas Mode Toggle + Context Hint -->
+          <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+            <div class="inline-flex items-center rounded-xl bg-slate-100 dark:bg-studio-card border border-slate-200 dark:border-studio-border p-0.5" role="group" aria-label="캔버스 조작 모드">
+              <button id="btnModeSelect" type="button" class="canvas-mode-btn is-active h-8 px-2 sm:px-2.5 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1 transition" aria-pressed="true" title="선택 모드 · 드래그로 수정 영역 지정">✏️ <span class="hidden sm:inline">선택</span></button>
+              <button id="btnModePan" type="button" class="canvas-mode-btn h-8 px-2 sm:px-2.5 rounded-lg text-[11px] font-semibold inline-flex items-center gap-1 transition" aria-pressed="false" title="이동 모드 · 손가락·마우스로 화면 이동">✋ <span class="hidden sm:inline">이동</span></button>
+            </div>
+            <div class="hidden xl:flex items-center gap-2 text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              <span class="inline-block w-2 h-2 rounded-full bg-indigo-500"></span>
+              <span id="modeHintText">드래그하여 영역 지정 · 빈 곳 클릭 또는 <kbd class="px-1 py-0.5 rounded bg-slate-100 dark:bg-studio-card border border-slate-200 dark:border-studio-border text-[10px]">Esc</kbd> 해제</span>
+            </div>
+          </div>
+
+          <!-- Center/Right: Zoom & Guides Controls -->
+          <div class="flex items-center gap-1 sm:gap-2 ml-auto">
+            <div class="inline-flex items-center rounded-xl bg-slate-100 dark:bg-studio-card border border-slate-200 dark:border-studio-border p-0.5">
+              <button id="btnZoomOut" type="button" class="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-slate-700 flex items-center justify-center font-bold text-sm transition" title="축소 (-)">
+                −
+              </button>
+              <button id="btnZoomReset" type="button" class="min-w-[54px] h-8 px-2 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-xs font-semibold tabular-nums transition" title="100% 원본 크기로 보기">
+                100%
+              </button>
+              <button id="btnZoomIn" type="button" class="w-8 h-8 rounded-lg hover:bg-white dark:hover:bg-slate-700 flex items-center justify-center font-bold text-sm transition" title="확대 (+)">
+                +
+              </button>
+            </div>
+
+            <button id="btnZoomFit" type="button" class="h-9 px-3 rounded-xl border border-slate-200 dark:border-studio-border bg-white dark:bg-studio-card hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition" title="화면에 맞추기">
+              맞춤
+            </button>
+
+            <button id="btnToggleGuides" type="button" class="h-9 px-3 rounded-xl border border-slate-200 dark:border-studio-border bg-white dark:bg-studio-card hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold inline-flex items-center gap-1.5 transition" title="모든 수정 영역 가이드선 표시/숨김">
+              <span id="guideStatusDot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+              <span id="guideStatusText">가이드선 OFF</span>
+            </button>
+          </div>
+        </footer>
+      </main>
+
+      <!-- RIGHT SIDEBAR: Properties & AI Context Restoration Inspector -->
+      <aside id="rightSidebar" class="fixed xl:static inset-y-14 right-0 z-40 w-80 shrink-0 bg-white dark:bg-studio-panel border-l border-slate-200 dark:border-studio-border flex flex-col transform translate-x-full xl:translate-x-0 transition-transform duration-200 overflow-y-auto">
+        <!-- Mobile / Tablet Inspector Close -->
+        <div class="xl:hidden sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-200 dark:border-studio-border bg-white/95 dark:bg-studio-panel/95 backdrop-blur">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">텍스트 편집</span>
+          <button id="btnCloseInspector" type="button" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-studio-card hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold transition" aria-label="속성 패널 닫기">✕ 닫기</button>
+        </div>
+
+        <!-- Empty Selection State -->
+        <div id="inspectorEmpty" class="p-5 flex-1 flex flex-col items-center justify-center text-center">
+          <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-studio-card text-slate-400 flex items-center justify-center mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          </div>
+          <h3 class="text-sm font-bold mb-1">선택된 수정 영역 없음</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">
+            슬라이드 위에서 깨진 글자 영역을 마우스로 드래그하면<br/>AI가 문맥을 분석해 자동으로 한글을 복원합니다.
+          </p>
+          <div class="w-full rounded-xl bg-slate-50 dark:bg-studio-card/70 border border-slate-200 dark:border-studio-border p-3 text-left text-[11px] text-slate-500 dark:text-slate-400 space-y-1.5">
+            <div class="font-semibold text-slate-700 dark:text-slate-200">단축키 안내</div>
+            <div>• <span class="font-medium">드래그</span> : 새 수정 영역 추가 및 AI 복원</div>
+            <div>• <span class="font-medium">빈 곳 클릭 / Esc</span> : 선택 해제 (점선 숨김)</div>
+            <div>• <span class="font-medium">Delete</span> : 선택한 영역만 개별 삭제</div>
+            <div>• <span class="font-medium">Space (길게)</span> : 원본 슬라이드 비교</div>
+            <div>• <span class="font-medium">Ctrl + Z / Y</span> : 실행 취소 / 다시 실행</div>
+          </div>
+        </div>
+
+        <!-- Active Box Inspector Form -->
+        <div id="inspectorForm" class="hidden p-4 space-y-4">
+          <!-- Section 1: Text & AI Context Restoration -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="propText" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">복원 텍스트</label>
+              <button id="btnRunAiRestore" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold shadow-sm transition">
+                <span>AI 문맥 복원</span>
+              </button>
+            </div>
+
+            <textarea id="propText" rows="3" placeholder="교체할 한국어 텍스트를 입력하세요..." class="w-full rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"></textarea>
+
+            <!-- AI Suggestion Panel -->
+            <div id="aiSuggestionBox" class="hidden rounded-xl bg-indigo-500/10 border border-indigo-500/25 p-2.5 space-y-2">
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400">AI 문맥 교정 제안</span>
+                <span id="aiDiffBadge" class="text-[10px] text-slate-500 dark:text-slate-300 truncate max-w-[175px]"></span>
+              </div>
+              <div id="aiCandidatesList" class="flex flex-wrap gap-1.5">
+                <!-- Candidate chips injected here -->
+              </div>
+            </div>
+
+            <!-- 글자 지우기 (배경으로 덮기) -->
+            <div class="flex items-center gap-1.5">
+              <button id="btnClearText" type="button" class="flex-1 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg border border-amber-300/70 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[11px] font-semibold transition" title="글자를 모두 지우고 주변 배경색으로 깔끔하게 덮습니다 (워터마크·불필요한 글자 제거)">🧹 글자 지우기</button>
+              <span class="text-[10px] text-slate-400 leading-tight">글자를 비우고<br/>주변색으로 덮기</span>
+            </div>
+          </div>
+
+          <hr class="border-slate-200 dark:border-studio-border" />
+
+          <!-- Section 2: Typography & Formatting -->
+          <div class="space-y-3">
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">글꼴 및 서식</div>
+
+            <!-- Font Family -->
+            <div>
+              <label for="propFontFamily" class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">한국어 폰트</label>
+              <select id="propFontFamily" class="w-full rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border px-2.5 py-2 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="Pretendard">Pretendard (프리텐다드 · 기본)</option>
+                <option value="Noto Sans KR">Noto Sans KR (본고딕)</option>
+                <option value="IBM Plex Sans KR">IBM Plex Sans KR</option>
+                <option value="Nanum Gothic">Nanum Gothic (나눔고딕)</option>
+                <option value="Gowun Dodum">Gowun Dodum (고운돋움)</option>
+                <option value="Noto Serif KR">Noto Serif KR (본명조)</option>
+                <option value="Nanum Myeongjo">Nanum Myeongjo (나눔명조)</option>
+                <option value="Do Hyeon">Do Hyeon (배민 도현체)</option>
+                <option value="Black Han Sans">Black Han Sans (검은고딕)</option>
+                <option value="Jua">Jua (배민 주아체)</option>
+              </select>
+            </div>
+
+            <!-- Font Size & Weight -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <div class="flex items-center justify-between mb-1">
+                  <label for="propFontSize" class="text-[11px] text-slate-500 dark:text-slate-400">크기 (px)</label>
+                  <button id="btnAutoFitText" type="button" class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">자동맞춤</button>
+                </div>
+                <input id="propFontSize" type="number" min="8" max="240" value="28" class="w-full rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border px-2.5 py-1.5 text-xs font-semibold" />
+              </div>
+
+              <div>
+                <label for="propFontWeight" class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">굵기</label>
+                <select id="propFontWeight" class="w-full rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border px-2 py-1.5 text-xs font-medium">
+                  <option value="400">보통 (400)</option>
+                  <option value="500">중간 (500)</option>
+                  <option value="700" selected>굵게 (700)</option>
+                  <option value="900">아주 굵게 (900)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Italic & Shadow Toggles -->
+            <div class="grid grid-cols-2 gap-2">
+              <label class="cursor-pointer flex items-center gap-2 px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border text-xs font-medium select-none">
+                <input id="propItalic" type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500" />
+                <span class="italic">글자 기울임</span>
+              </label>
+              <label class="cursor-pointer flex items-center gap-2 px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border text-xs font-medium select-none">
+                <input id="propShadow" type="checkbox" class="rounded text-indigo-600 focus:ring-indigo-500" />
+                <span>글자 그림자</span>
+              </label>
+            </div>
+
+            <!-- Alignments -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <span class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">가로 정렬</span>
+                <div class="grid grid-cols-3 rounded-xl bg-slate-100 dark:bg-studio-card p-0.5 border border-slate-200 dark:border-studio-border">
+                  <button type="button" data-align="left" class="align-btn py-1 rounded-lg text-[11px] font-semibold">좌</button>
+                  <button type="button" data-align="center" class="align-btn py-1 rounded-lg text-[11px] font-semibold">중</button>
+                  <button type="button" data-align="right" class="align-btn py-1 rounded-lg text-[11px] font-semibold">우</button>
+                </div>
+              </div>
+
+              <div>
+                <span class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">세로 정렬</span>
+                <div class="grid grid-cols-3 rounded-xl bg-slate-100 dark:bg-studio-card p-0.5 border border-slate-200 dark:border-studio-border">
+                  <button type="button" data-valign="top" class="valign-btn py-1 rounded-lg text-[11px] font-semibold">상</button>
+                  <button type="button" data-valign="middle" class="valign-btn py-1 rounded-lg text-[11px] font-semibold">중</button>
+                  <button type="button" data-valign="bottom" class="valign-btn py-1 rounded-lg text-[11px] font-semibold">하</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Line Height & Letter Spacing -->
+            <div class="space-y-2">
+              <div>
+                <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
+                  <span>줄간격</span>
+                  <span id="valLineHeight" class="font-semibold tabular-nums">1.25</span>
+                </div>
+                <input id="propLineHeight" type="range" min="0.9" max="2.2" step="0.05" value="1.25" class="w-full" />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
+                  <span>자간 (px)</span>
+                  <span id="valLetterSpacing" class="font-semibold tabular-nums">0</span>
+                </div>
+                <input id="propLetterSpacing" type="range" min="-4" max="16" step="0.5" value="0" class="w-full" />
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-slate-200 dark:border-studio-border" />
+
+          <!-- Section 3: Text Color & Background Restoration -->
+          <div class="space-y-3">
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">색상 및 배경 복원</div>
+
+            <!-- Text Color -->
+            <div>
+              <label class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">글자 색상</label>
+              <div class="flex items-center gap-1.5">
+                <input id="propTextColor" type="color" value="#1e293b" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-studio-border bg-transparent cursor-pointer p-0.5" />
+                <input id="propTextColorHex" type="text" value="#1e293b" maxlength="7" class="flex-1 rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border px-2.5 py-1.5 text-xs font-mono uppercase" />
+                <button id="btnEyedropText" type="button" class="p-2 rounded-xl border border-slate-200 dark:border-studio-border bg-slate-50 hover:bg-indigo-50 dark:bg-studio-card dark:hover:bg-indigo-500/20 text-xs transition" title="캔버스에서 글자색 스포이드 추출">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Background Mode -->
+            <div>
+              <label for="propBgMode" class="block text-[11px] text-slate-500 dark:text-slate-400 mb-1">배경 지우기 방식</label>
+              <select id="propBgMode" class="w-full rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border px-2.5 py-2 text-xs font-medium">
+                <option value="auto">스마트 자동 복원 (단색/그라데이션)</option>
+                <option value="solid">지정 단색 채우기</option>
+                <option value="transparent">투명 배경 (글자만 추가)</option>
+              </select>
+            </div>
+
+            <!-- Background Solid Color -->
+            <div id="bgSolidRow">
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[11px] text-slate-500 dark:text-slate-400">배경 색상</label>
+                <button id="btnResampleBg" type="button" class="text-[10px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">주변색 재추출</button>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <input id="propBgColor" type="color" value="#ffffff" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-studio-border bg-transparent cursor-pointer p-0.5" />
+                <input id="propBgColorHex" type="text" value="#ffffff" maxlength="7" class="flex-1 rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border px-2.5 py-1.5 text-xs font-mono uppercase" />
+                <button id="btnEyedropBg" type="button" class="p-2 rounded-xl border border-slate-200 dark:border-studio-border bg-slate-50 hover:bg-indigo-50 dark:bg-studio-card dark:hover:bg-indigo-500/20 text-xs transition" title="캔버스에서 배경색 스포이드 추출">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Padding & Radius -->
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
+                  <span>여백 확장</span>
+                  <span id="valPadding" class="font-semibold tabular-nums">2px</span>
+                </div>
+                <input id="propPadding" type="range" min="0" max="20" step="1" value="2" class="w-full" />
+              </div>
+              <div>
+                <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
+                  <span>모서리 둥글기</span>
+                  <span id="valRadius" class="font-semibold tabular-nums">4px</span>
+                </div>
+                <input id="propRadius" type="range" min="0" max="24" step="1" value="4" class="w-full" />
+              </div>
+            </div>
+          </div>
+
+          <hr class="border-slate-200 dark:border-studio-border" />
+
+          <!-- Section 4: Layer Actions -->
+          <div class="flex items-center gap-2 pt-1 pb-4">
+            <button id="btnDuplicateBox" type="button" class="flex-1 py-2 px-3 rounded-xl border border-slate-200 dark:border-studio-border bg-slate-50 hover:bg-slate-100 dark:bg-studio-card dark:hover:bg-slate-800 text-xs font-semibold transition">
+              영역 복제
+            </button>
+            <button id="btnDeleteBox" type="button" class="flex-1 py-2 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 text-xs font-semibold transition">
+              선택 영역 삭제
+            </button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Gemini API Key Modal -->
+  <div id="keyModal" class="hidden fixed inset-0 z-[85] bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-studio-panel border border-slate-200 dark:border-studio-border rounded-2xl p-5 shadow-2xl max-w-md w-full space-y-4" role="dialog" aria-modal="true" aria-labelledby="keyModalTitle">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <h3 id="keyModalTitle" class="text-base font-bold">🔑 Gemini API 키 등록</h3>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+            키가 없어도 드래그한 영역을 <b>오프라인 OCR(한국어·영어)</b>로 인식합니다. 키를 넣으면 문맥에 맞는 자동 복원과 <b>전체 자동 탐지</b>를 쓸 수 있어요.
+          </p>
+        </div>
+        <button id="btnCloseKeyModal" type="button" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-studio-card text-slate-400" aria-label="닫기" title="닫기">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="space-y-1.5">
+        <label for="keyInput" class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">API 키</label>
+        <input id="keyInput" type="password" class="w-full rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border px-3 py-2 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="AIza..." autocomplete="off" spellcheck="false" />
+        <p id="keyStatus" class="text-[11px] text-slate-500 dark:text-slate-400"></p>
+      </div>
+
+      <p class="text-[10px] text-slate-400 leading-relaxed">
+        키는 이 브라우저의 <code>localStorage</code>(<code>slidefix_gemini_key</code>)에만 저장되고, 복원을 요청할 때만 Google Gemini API로 전송됩니다. 공용 PC에서는 등록하지 마세요.
+        발급: <a class="text-indigo-600 dark:text-indigo-400 underline" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>
+      </p>
+
+      <div class="flex items-center justify-end gap-2">
+        <button id="btnDeleteKey" type="button" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-studio-border text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition">키 삭제</button>
+        <button id="btnCancelKey" type="button" class="px-3 py-2 rounded-xl border border-slate-200 dark:border-studio-border text-xs font-semibold hover:bg-slate-100 dark:hover:bg-studio-card transition">취소</button>
+        <button id="btnSaveKey" type="button" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="hidden fixed inset-0 z-[70] bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-studio-panel border border-slate-200 dark:border-studio-border rounded-2xl px-6 py-5 shadow-2xl flex items-center gap-3.5 max-w-sm w-full">
+      <div class="w-7 h-7 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin shrink-0"></div>
+      <div>
+        <div id="loadingTitle" class="text-sm font-bold">처리 중...</div>
+        <div id="loadingSub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">잠시만 기다려 주세요.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Confirm Modal (No window.confirm) -->
+  <div id="confirmModal" class="hidden fixed inset-0 z-[80] bg-slate-950/65 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-studio-panel border border-slate-200 dark:border-studio-border rounded-2xl p-5 shadow-2xl max-w-sm w-full space-y-4">
+      <h3 id="confirmTitle" class="text-base font-bold">확인</h3>
+      <p id="confirmMessage" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+      <div class="flex justify-end gap-2">
+        <button id="btnConfirmCancel" type="button" class="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-studio-border text-xs font-semibold hover:bg-slate-100 dark:hover:bg-studio-card transition">취소</button>
+        <button id="btnConfirmOk" type="button" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold transition">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="fixed bottom-16 left-1/2 -translate-x-1/2 z-[90] flex flex-col items-center gap-2 pointer-events-none"></div>
+
+  <script>
+    // Configure PDF.js worker
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+
+    // ==================== APPLICATION STATE ====================
+    const state = {
+      slides: [], // { id, name, width, height, img, boxes: [], undoStack: [], redoStack: [], thumbUrl }
+      currentSlideIndex: -1,
+      selectedBoxId: null,
+      zoom: 1,
+      autoFitZoom: true,
+      showGuides: false, // Default OFF: completed boxes have NO dashed border unless selected or explicitly toggled ON
+      isComparingOriginal: false,
+      eyedropperTarget: null, // null | 'text' | 'bg'
+      interaction: null, // { type: 'draw'|'move'|'resize', handle, startX, startY, origBox, moved }
+      isTextEditingSession: false,
+      thumbTimer: null,
+      canvasMode: 'select', // 'select' | 'pan' — 모바일/태블릿 화면 이동
+    };
+
+    const HANDLE_SIZE = 8;
+
+    // ==================== DOM REFERENCES ====================
+    const dom = {
+      appShell: document.getElementById('appShell'),
+      leftSidebar: document.getElementById('leftSidebar'),
+      rightSidebar: document.getElementById('rightSidebar'),
+      btnToggleLeftPanel: document.getElementById('btnToggleLeftPanel'),
+      btnToggleRightPanel: document.getElementById('btnToggleRightPanel'),
+      fileInput: document.getElementById('fileInput'),
+      jsonInput: document.getElementById('jsonInput'),
+      btnCloseProject: document.getElementById('btnCloseProject'),
+      btnLoadSample: document.getElementById('btnLoadSample'),
+      btnUndo: document.getElementById('btnUndo'),
+      btnRedo: document.getElementById('btnRedo'),
+      btnCompareOriginal: document.getElementById('btnCompareOriginal'),
+      btnProjectMenu: document.getElementById('btnProjectMenu'),
+      projectDropdown: document.getElementById('projectDropdown'),
+      btnSaveJson: document.getElementById('btnSaveJson'),
+      btnExportMenu: document.getElementById('btnExportMenu'),
+      exportDropdown: document.getElementById('exportDropdown'),
+      btnExportPng: document.getElementById('btnExportPng'),
+      btnExportJpg: document.getElementById('btnExportJpg'),
+      btnExportPdf: document.getElementById('btnExportPdf'),
+      btnToggleTheme: document.getElementById('btnToggleTheme'),
+
+      // Gemini API Key
+      btnOpenKeyModal: document.getElementById('btnOpenKeyModal'),
+      aiKeyDot: document.getElementById('aiKeyDot'),
+      keyModal: document.getElementById('keyModal'),
+      keyInput: document.getElementById('keyInput'),
+      keyStatus: document.getElementById('keyStatus'),
+      btnSaveKey: document.getElementById('btnSaveKey'),
+      btnDeleteKey: document.getElementById('btnDeleteKey'),
+      btnCancelKey: document.getElementById('btnCancelKey'),
+      btnCloseKeyModal: document.getElementById('btnCloseKeyModal'),
+
+      // Canvas mode & mobile inspector
+      btnModeSelect: document.getElementById('btnModeSelect'),
+      btnModePan: document.getElementById('btnModePan'),
+      modeHintText: document.getElementById('modeHintText'),
+      btnCloseInspector: document.getElementById('btnCloseInspector'),
+      fbClear: document.getElementById('fbClear'),
+      btnClearText: document.getElementById('btnClearText'),
+
+      slideCountLabel: document.getElementById('slideCountLabel'),
+      slideListContainer: document.getElementById('slideListContainer'),
+      layerCountLabel: document.getElementById('layerCountLabel'),
+      layerListContainer: document.getElementById('layerListContainer'),
+      btnAutoScanSlide: document.getElementById('btnAutoScanSlide'),
+
+      stageContainer: document.getElementById('stageContainer'),
+      welcomeDropzone: document.getElementById('welcomeDropzone'),
+      canvasOuterFlex: document.getElementById('canvasOuterFlex'),
+      canvasWrapper: document.getElementById('canvasWrapper'),
+      mainCanvas: document.getElementById('mainCanvas'),
+      floatingQuickBar: document.getElementById('floatingQuickBar'),
+      fbAiFix: document.getElementById('fbAiFix'),
+      fbAutoFit: document.getElementById('fbAutoFit'),
+      fbDuplicate: document.getElementById('fbDuplicate'),
+      fbDelete: document.getElementById('fbDelete'),
+
+      // Bottom Control Bar
+      btnZoomOut: document.getElementById('btnZoomOut'),
+      btnZoomReset: document.getElementById('btnZoomReset'),
+      btnZoomIn: document.getElementById('btnZoomIn'),
+      btnZoomFit: document.getElementById('btnZoomFit'),
+      btnToggleGuides: document.getElementById('btnToggleGuides'),
+      guideStatusDot: document.getElementById('guideStatusDot'),
+      guideStatusText: document.getElementById('guideStatusText'),
+
+      // Inspector
+      inspectorEmpty: document.getElementById('inspectorEmpty'),
+      inspectorForm: document.getElementById('inspectorForm'),
+      propText: document.getElementById('propText'),
+      btnRunAiRestore: document.getElementById('btnRunAiRestore'),
+      aiSuggestionBox: document.getElementById('aiSuggestionBox'),
+      aiDiffBadge: document.getElementById('aiDiffBadge'),
+      aiCandidatesList: document.getElementById('aiCandidatesList'),
+      propFontFamily: document.getElementById('propFontFamily'),
+      propFontSize: document.getElementById('propFontSize'),
+      btnAutoFitText: document.getElementById('btnAutoFitText'),
+      propFontWeight: document.getElementById('propFontWeight'),
+      propItalic: document.getElementById('propItalic'),
+      propShadow: document.getElementById('propShadow'),
+      propLineHeight: document.getElementById('propLineHeight'),
+      valLineHeight: document.getElementById('valLineHeight'),
+      propLetterSpacing: document.getElementById('propLetterSpacing'),
+      valLetterSpacing: document.getElementById('valLetterSpacing'),
+      propTextColor: document.getElementById('propTextColor'),
+      propTextColorHex: document.getElementById('propTextColorHex'),
+      btnEyedropText: document.getElementById('btnEyedropText'),
+      propBgMode: document.getElementById('propBgMode'),
+      bgSolidRow: document.getElementById('bgSolidRow'),
+      btnResampleBg: document.getElementById('btnResampleBg'),
+      propBgColor: document.getElementById('propBgColor'),
+      propBgColorHex: document.getElementById('propBgColorHex'),
+      btnEyedropBg: document.getElementById('btnEyedropBg'),
+      propPadding: document.getElementById('propPadding'),
+      valPadding: document.getElementById('valPadding'),
+      propRadius: document.getElementById('propRadius'),
+      valRadius: document.getElementById('valRadius'),
+      btnDuplicateBox: document.getElementById('btnDuplicateBox'),
+      btnDeleteBox: document.getElementById('btnDeleteBox'),
+
+      loadingOverlay: document.getElementById('loadingOverlay'),
+      loadingTitle: document.getElementById('loadingTitle'),
+      loadingSub: document.getElementById('loadingSub'),
+      confirmModal: document.getElementById('confirmModal'),
+      confirmTitle: document.getElementById('confirmTitle'),
+      confirmMessage: document.getElementById('confirmMessage'),
+      btnConfirmCancel: document.getElementById('btnConfirmCancel'),
+      btnConfirmOk: document.getElementById('btnConfirmOk'),
+      toastContainer: document.getElementById('toastContainer'),
+    };
+
+    const ctx = dom.mainCanvas.getContext('2d');
+
+    // ==================== UTILITIES ====================
+    function uid() {
+      return 'box_' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+    }
+
+    function clamp(val, min, max) {
+      return Math.max(min, Math.min(max, val));
+    }
+
+    function rgbToHex(r, g, b) {
+      const toHex = (n) => clamp(Math.round(n), 0, 255).toString(16).padStart(2, '0');
+      return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+
+    function normalizeHex(str) {
+      if (!str) return null;
+      let clean = str.trim().replace(/^#/, '');
+      if (/^[0-9a-fA-F]{3}$/.test(clean)) {
+        clean = clean.split('').map(c => c + c).join('');
+      }
+      if (/^[0-9a-fA-F]{6}$/.test(clean)) {
+        return '#' + clean.toLowerCase();
+      }
+      return null;
+    }
+
+    function showToast(msg, type = 'info') {
+      const el = document.createElement('div');
+      const colors = {
+        info: 'bg-slate-900/95 text-white border-slate-700',
+        success: 'bg-emerald-600/95 text-white border-emerald-500',
+        warn: 'bg-amber-600/95 text-white border-amber-500',
+        error: 'bg-rose-600/95 text-white border-rose-500',
+      };
+      el.className = `px-4 py-2 rounded-xl border shadow-lg text-xs font-semibold transition-all duration-200 ${colors[type] || colors.info}`;
+      el.textContent = msg;
+      dom.toastContainer.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(6px)';
+        setTimeout(() => el.remove(), 220);
+      }, 2600);
+    }
+
+    function setLoading(visible, title = '처리 중...', sub = '잠시만 기다려 주세요.') {
+      if (visible) {
+        dom.loadingTitle.textContent = title;
+        dom.loadingSub.textContent = sub;
+        dom.loadingOverlay.classList.remove('hidden');
+      } else {
+        dom.loadingOverlay.classList.add('hidden');
+      }
+    }
+
+    function askConfirm(title, message) {
+      return new Promise((resolve) => {
+        dom.confirmTitle.textContent = title;
+        dom.confirmMessage.textContent = message;
+        dom.confirmModal.classList.remove('hidden');
+
+        const cleanup = (result) => {
+          dom.confirmModal.classList.add('hidden');
+          dom.btnConfirmCancel.removeEventListener('click', onCancel);
+          dom.btnConfirmOk.removeEventListener('click', onOk);
+          resolve(result);
+        };
+        const onCancel = () => cleanup(false);
+        const onOk = () => cleanup(true);
+
+        dom.btnConfirmCancel.addEventListener('click', onCancel);
+        dom.btnConfirmOk.addEventListener('click', onOk);
+      });
+    }
+
+    function getCurrentSlide() {
+      if (state.currentSlideIndex < 0 || state.currentSlideIndex >= state.slides.length) return null;
+      return state.slides[state.currentSlideIndex];
+    }
+
+    // ==================== GEMINI API KEY (localStorage) ====================
+    const AI_KEY_STORAGE = 'slidefix_gemini_key';
+    /* 2026-11 기준 널리 쓰이는 모델을 먼저 시도하고, 없으면 프리뷰 모델로 넘어간다 */
+    const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-3-flash-preview'];
+
+    function getApiKey() {
+      try { return String(localStorage.getItem(AI_KEY_STORAGE) || '').trim(); } catch (_) { return ''; }
+    }
+
+    function maskKey(key) {
+      const s = String(key || '');
+      if (!s) return '';
+      return s.length <= 10 ? '••••••' : s.slice(0, 4) + '••••' + s.slice(-4);
+    }
+
+    function updateAiKeyUI() {
+      const key = getApiKey();
+      if (dom.aiKeyDot) {
+        dom.aiKeyDot.className = 'w-1.5 h-1.5 rounded-full ' + (key ? 'bg-emerald-500' : 'bg-slate-400');
+      }
+      if (dom.btnOpenKeyModal) {
+        dom.btnOpenKeyModal.title = key
+          ? `Gemini API 키 등록됨 (${maskKey(key)}) · 눌러서 변경하거나 삭제`
+          : 'Gemini API 키 등록 (선택) · 없으면 오프라인 OCR로 동작합니다';
+      }
+      if (dom.keyStatus) {
+        dom.keyStatus.textContent = key
+          ? `현재 등록된 키: ${maskKey(key)}`
+          : '등록된 키가 없습니다. 지금은 오프라인 OCR 모드로 동작합니다.';
+      }
+    }
+
+    function openKeyModal() {
+      updateAiKeyUI();
+      if (dom.keyInput) dom.keyInput.value = '';
+      dom.keyModal.classList.remove('hidden');
+      setTimeout(() => { try { dom.keyInput.focus(); } catch (_) {} }, 30);
+    }
+
+    function closeKeyModal() {
+      dom.keyModal.classList.add('hidden');
+    }
+
+    function getSelectedBox() {
+      const slide = getCurrentSlide();
+      if (!slide || !state.selectedBoxId) return null;
+      return slide.boxes.find(b => b.id === state.selectedBoxId) || null;
+    }
+
+    // ==================== UNDO / REDO HISTORY ====================
+    function cloneBoxes(boxes) {
+      return JSON.parse(JSON.stringify(boxes));
+    }
+
+    function pushUndoState(slide = getCurrentSlide()) {
+      if (!slide) return;
+      slide.undoStack.push(cloneBoxes(slide.boxes));
+      if (slide.undoStack.length > 40) slide.undoStack.shift();
+      slide.redoStack = [];
+      updateUndoRedoButtons();
+    }
+
+    function undo() {
+      const slide = getCurrentSlide();
+      if (!slide || slide.undoStack.length === 0) return;
+      slide.redoStack.push(cloneBoxes(slide.boxes));
+      slide.boxes = slide.undoStack.pop();
+      if (!slide.boxes.some(b => b.id === state.selectedBoxId)) {
+        state.selectedBoxId = null;
+      }
+      state.isTextEditingSession = false;
+      syncAllUI();
+      showToast('실행 취소됨');
+    }
+
+    function redo() {
+      const slide = getCurrentSlide();
+      if (!slide || slide.redoStack.length === 0) return;
+      slide.undoStack.push(cloneBoxes(slide.boxes));
+      slide.boxes = slide.redoStack.pop();
+      if (!slide.boxes.some(b => b.id === state.selectedBoxId)) {
+        state.selectedBoxId = null;
+      }
+      state.isTextEditingSession = false;
+      syncAllUI();
+      showToast('다시 실행됨');
+    }
+
+    function updateUndoRedoButtons() {
+      const slide = getCurrentSlide();
+      dom.btnUndo.disabled = !slide || slide.undoStack.length === 0;
+      dom.btnRedo.disabled = !slide || slide.redoStack.length === 0;
+    }
+
+    // ==================== SMART BACKGROUND & COLOR SAMPLING ====================
+    function analyzeRegionColors(slide, x, y, w, h) {
+      const off = document.createElement('canvas');
+      off.width = slide.width;
+      off.height = slide.height;
+      const octx = off.getContext('2d');
+      octx.drawImage(slide.img, 0, 0, slide.width, slide.height);
+
+      const sx = clamp(Math.floor(x), 0, slide.width - 1);
+      const sy = clamp(Math.floor(y), 0, slide.height - 1);
+      const sw = clamp(Math.ceil(w), 1, slide.width - sx);
+      const sh = clamp(Math.ceil(h), 1, slide.height - sy);
+
+      // Sample 2px border outside the box for background colors
+      const pad = 3;
+      const bx1 = clamp(sx - pad, 0, slide.width - 1);
+      const by1 = clamp(sy - pad, 0, slide.height - 1);
+      const bx2 = clamp(sx + sw + pad, 0, slide.width - 1);
+      const by2 = clamp(sy + sh + pad, 0, slide.height - 1);
+
+      const topSamples = [];
+      const bottomSamples = [];
+      const leftSamples = [];
+      const rightSamples = [];
+      const allBorder = [];
+
+      const getPx = (px, py) => {
+        const d = octx.getImageData(px, py, 1, 1).data;
+        return [d[0], d[1], d[2]];
+      };
+
+      const stepX = Math.max(1, Math.floor((bx2 - bx1) / 16));
+      for (let px = bx1; px <= bx2; px += stepX) {
+        const cTop = getPx(px, by1);
+        const cBot = getPx(px, by2);
+        topSamples.push(cTop);
+        bottomSamples.push(cBot);
+        allBorder.push(cTop, cBot);
+      }
+
+      const stepY = Math.max(1, Math.floor((by2 - by1) / 12));
+      for (let py = by1; py <= by2; py += stepY) {
+        const cLeft = getPx(bx1, py);
+        const cRight = getPx(bx2, py);
+        leftSamples.push(cLeft);
+        rightSamples.push(cRight);
+        allBorder.push(cLeft, cRight);
+      }
+
+      const avg = (arr) => {
+        if (!arr.length) return [255, 255, 255];
+        const sum = arr.reduce((acc, c) => [acc[0] + c[0], acc[1] + c[1], acc[2] + c[2]], [0, 0, 0]);
+        return [sum[0] / arr.length, sum[1] / arr.length, sum[2] / arr.length];
+      };
+
+      const colorDist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+
+      const bgAvg = avg(allBorder);
+      const topAvg = avg(topSamples);
+      const botAvg = avg(bottomSamples);
+      const leftAvg = avg(leftSamples);
+      const rightAvg = avg(rightSamples);
+
+      const vDiff = colorDist(topAvg, botAvg);
+      const hDiff = colorDist(leftAvg, rightAvg);
+
+      let gradientType = 'solid';
+      let gradStart = rgbToHex(...bgAvg);
+      let gradEnd = gradStart;
+
+      if (vDiff > 16 && vDiff >= hDiff && vDiff < 160) {
+        gradientType = 'vertical';
+        gradStart = rgbToHex(...topAvg);
+        gradEnd = rgbToHex(...botAvg);
+      } else if (hDiff > 16 && hDiff > vDiff && hDiff < 160) {
+        gradientType = 'horizontal';
+        gradStart = rgbToHex(...leftAvg);
+        gradEnd = rgbToHex(...rightAvg);
+      }
+
+      // Sample interior pixels to find foreground text color (highest contrast against bgAvg)
+      const innerData = octx.getImageData(sx, sy, sw, sh).data;
+      let bestTextColor = null;
+      let maxContrast = 45; // minimum contrast threshold
+      for (let i = 0; i < innerData.length; i += 16) {
+        const c = [innerData[i], innerData[i + 1], innerData[i + 2]];
+        const dist = colorDist(c, bgAvg);
+        if (dist > maxContrast) {
+          maxContrast = dist;
+          bestTextColor = c;
+        }
+      }
+
+      if (!bestTextColor) {
+        // Fallback based on background luminance
+        const lum = 0.299 * bgAvg[0] + 0.587 * bgAvg[1] + 0.114 * bgAvg[2];
+        bestTextColor = lum > 135 ? [15, 23, 42] : [248, 250, 252];
+      }
+
+      return {
+        bgColor: rgbToHex(...bgAvg),
+        gradientType,
+        gradStart,
+        gradEnd,
+        textColor: rgbToHex(...bestTextColor),
+      };
+    }
+
+    // ==================== TEXT WRAPPING & AUTO-FIT ====================
+    function buildFontString(box, fontSizeOverride) {
+      const size = fontSizeOverride || box.fontSize || 24;
+      const style = box.italic ? 'italic ' : '';
+      const weight = box.fontWeight || '700';
+      const family = `"${box.fontFamily || 'Pretendard'}", "Noto Sans KR", sans-serif`;
+      return `${style}${weight} ${size}px ${family}`;
+    }
+
+    function measureTextWithSpacing(context, text, letterSpacing) {
+      if (!letterSpacing) return context.measureText(text).width;
+      const chars = Array.from(text);
+      if (chars.length === 0) return 0;
+      let total = 0;
+      for (let i = 0; i < chars.length; i++) {
+        total += context.measureText(chars[i]).width;
+        if (i < chars.length - 1) total += letterSpacing;
+      }
+      return total;
+    }
+
+    function wrapTextLines(context, text, maxWidth, letterSpacing) {
+      const paragraphs = (text || '').split('\n');
+      const lines = [];
+      for (const para of paragraphs) {
+        if (para === '') {
+          lines.push('');
+          continue;
+        }
+        const chars = Array.from(para);
+        let current = '';
+        for (let i = 0; i < chars.length; i++) {
+          const test = current + chars[i];
+          if (measureTextWithSpacing(context, test, letterSpacing) > maxWidth && current.length > 0) {
+            lines.push(current);
+            current = chars[i];
+          } else {
+            current = test;
+          }
+        }
+        if (current) lines.push(current);
+      }
+      return lines;
+    }
+
+    function autoFitBoxFontSize(box) {
+      if (!box || !box.text) return;
+      const availW = Math.max(16, box.w - 8);
+      const availH = Math.max(14, box.h - 6);
+      let low = 10;
+      let high = Math.min(220, Math.max(14, Math.floor(box.h * 0.92)));
+      let best = low;
+
+      while (low <= high) {
+        const mid = Math.floor((low + high) / 2);
+        ctx.font = buildFontString(box, mid);
+        const lines = wrapTextLines(ctx, box.text, availW, box.letterSpacing || 0);
+        const totalH = lines.length * mid * (box.lineHeight || 1.25);
+        if (totalH <= availH) {
+          best = mid;
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+      box.fontSize = best;
+    }
+
+    // ==================== CANVAS RENDERING ====================
+    function drawRoundedRect(context, x, y, w, h, r) {
+      const radius = Math.min(r, w / 2, h / 2);
+      context.beginPath();
+      context.moveTo(x + radius, y);
+      context.arcTo(x + w, y, x + w, y + h, radius);
+      context.arcTo(x + w, y + h, x, y + h, radius);
+      context.arcTo(x, y + h, x, y, radius);
+      context.arcTo(x, y, x + w, y, radius);
+      context.closePath();
+    }
+
+    function renderSlideToContext(targetCtx, slide, options = {}) {
+      const { includeGuides = false, selectedBoxId = null, originalOnly = false } = options;
+      targetCtx.clearRect(0, 0, slide.width, slide.height);
+      targetCtx.drawImage(slide.img, 0, 0, slide.width, slide.height);
+
+      if (originalOnly) return;
+
+      for (const box of slide.boxes) {
+        if (box.hidden) continue;
+
+        const pad = box.padding ?? 2;
+        const bx = box.x - pad;
+        const by = box.y - pad;
+        const bw = box.w + pad * 2;
+        const bh = box.h + pad * 2;
+
+        // 1. Background Fill
+        if (box.bgMode !== 'transparent') {
+          targetCtx.save();
+          drawRoundedRect(targetCtx, bx, by, bw, bh, box.radius ?? 4);
+          if (box.bgMode === 'auto' && box.gradientType === 'vertical') {
+            const grad = targetCtx.createLinearGradient(0, by, 0, by + bh);
+            grad.addColorStop(0, box.gradStart || box.bgColor);
+            grad.addColorStop(1, box.gradEnd || box.bgColor);
+            targetCtx.fillStyle = grad;
+          } else if (box.bgMode === 'auto' && box.gradientType === 'horizontal') {
+            const grad = targetCtx.createLinearGradient(bx, 0, bx + bw, 0);
+            grad.addColorStop(0, box.gradStart || box.bgColor);
+            grad.addColorStop(1, box.gradEnd || box.bgColor);
+            targetCtx.fillStyle = grad;
+          } else {
+            targetCtx.fillStyle = box.bgColor || '#ffffff';
+          }
+          targetCtx.fill();
+          targetCtx.restore();
+        }
+
+        // 2. Text Rendering
+        if (box.text) {
+          targetCtx.save();
+          targetCtx.font = buildFontString(box);
+          targetCtx.fillStyle = box.textColor || '#1e293b';
+          targetCtx.textBaseline = 'top';
+
+          if (box.shadow) {
+            targetCtx.shadowColor = 'rgba(0, 0, 0, 0.38)';
+            targetCtx.shadowBlur = Math.max(3, Math.round(box.fontSize * 0.12));
+            targetCtx.shadowOffsetX = 0;
+            targetCtx.shadowOffsetY = 2;
+          }
+
+          const innerW = Math.max(10, box.w - 6);
+          const spacing = box.letterSpacing || 0;
+          const lines = wrapTextLines(targetCtx, box.text, innerW, spacing);
+          const lineH = box.fontSize * (box.lineHeight || 1.25);
+          const totalTextH = lines.length * lineH;
+
+          let startY = box.y + 3;
+          if (box.vAlign === 'middle') {
+            startY = box.y + Math.max(0, (box.h - totalTextH) / 2);
+          } else if (box.vAlign === 'bottom') {
+            startY = box.y + Math.max(0, box.h - totalTextH - 3);
+          }
+
+          lines.forEach((line, idx) => {
+            const lineW = measureTextWithSpacing(targetCtx, line, spacing);
+            let startX = box.x + 3;
+            if (box.align === 'center') {
+              startX = box.x + (box.w - lineW) / 2;
+            } else if (box.align === 'right') {
+              startX = box.x + box.w - lineW - 3;
+            }
+
+            const drawY = startY + idx * lineH;
+            if (!spacing) {
+              targetCtx.fillText(line, startX, drawY);
+            } else {
+              let cursorX = startX;
+              for (const ch of Array.from(line)) {
+                targetCtx.fillText(ch, cursorX, drawY);
+                cursorX += targetCtx.measureText(ch).width + spacing;
+              }
+            }
+          });
+
+          targetCtx.restore();
+        }
+
+        // 3. Selection / Guide Outlines (ONLY when selected OR state.showGuides is ON)
+        const isSelected = box.id === selectedBoxId;
+        if (isSelected || includeGuides) {
+          targetCtx.save();
+          targetCtx.strokeStyle = isSelected ? '#6366f1' : 'rgba(99, 102, 241, 0.65)';
+          targetCtx.lineWidth = isSelected ? 2 : 1.5;
+          targetCtx.setLineDash([5, 4]);
+          targetCtx.strokeRect(box.x, box.y, box.w, box.h);
+          targetCtx.setLineDash([]);
+
+          if (isSelected) {
+            const handles = getBoxHandles(box);
+            targetCtx.fillStyle = '#ffffff';
+            targetCtx.strokeStyle = '#6366f1';
+            targetCtx.lineWidth = 2;
+            for (const h of handles) {
+              targetCtx.fillRect(h.x - HANDLE_SIZE / 2, h.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+              targetCtx.strokeRect(h.x - HANDLE_SIZE / 2, h.y - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+            }
+          }
+          targetCtx.restore();
+        }
+      }
+    }
+
+    function renderCanvas() {
+      const slide = getCurrentSlide();
+      if (!slide) {
+        dom.welcomeDropzone.classList.remove('hidden');
+        dom.canvasOuterFlex.classList.add('hidden');
+        dom.floatingQuickBar.classList.add('hidden');
+        return;
+      }
+
+      dom.welcomeDropzone.classList.add('hidden');
+      dom.canvasOuterFlex.classList.remove('hidden');
+
+      dom.mainCanvas.width = slide.width;
+      dom.mainCanvas.height = slide.height;
+
+      const displayW = Math.round(slide.width * state.zoom);
+      const displayH = Math.round(slide.height * state.zoom);
+      dom.mainCanvas.style.width = displayW + 'px';
+      dom.mainCanvas.style.height = displayH + 'px';
+      dom.canvasWrapper.style.width = displayW + 'px';
+      dom.canvasWrapper.style.height = displayH + 'px';
+
+      renderSlideToContext(ctx, slide, {
+        includeGuides: state.showGuides,
+        selectedBoxId: state.selectedBoxId,
+        originalOnly: state.isComparingOriginal,
+      });
+
+      dom.btnZoomReset.textContent = Math.round(state.zoom * 100) + '%';
+      updateFloatingQuickBar();
+    }
+
+    function updateFloatingQuickBar() {
+      const slide = getCurrentSlide();
+      const box = getSelectedBox();
+      if (!slide || !box || state.isComparingOriginal) {
+        dom.floatingQuickBar.classList.add('hidden');
+        return;
+      }
+      dom.floatingQuickBar.classList.remove('hidden');
+      const centerX = (box.x + box.w / 2) * state.zoom;
+      const topY = box.y * state.zoom;
+      dom.floatingQuickBar.style.left = clamp(centerX, 110, Math.max(110, slide.width * state.zoom - 110)) + 'px';
+      if (topY < 46) {
+        dom.floatingQuickBar.style.top = (box.y + box.h) * state.zoom + 8 + 'px';
+      } else {
+        dom.floatingQuickBar.style.top = topY - 40 + 'px';
+      }
+    }
+
+    // ==================== ZOOM & GUIDES CONTROLS ====================
+    function setZoom(newZoom, manual = true) {
+      const slide = getCurrentSlide();
+      if (!slide) return;
+      if (manual) state.autoFitZoom = false;
+      state.zoom = clamp(newZoom, 0.15, 3.0);
+      renderCanvas();
+    }
+
+    function fitZoomToStage() {
+      const slide = getCurrentSlide();
+      if (!slide) return;
+      const rect = dom.stageContainer.getBoundingClientRect();
+      const availW = Math.max(200, rect.width - 48);
+      const availH = Math.max(160, rect.height - 48);
+      const ratio = Math.min(availW / slide.width, availH / slide.height);
+      state.autoFitZoom = true;
+      state.zoom = clamp(Math.round(ratio * 100) / 100, 0.15, 2.0);
+      renderCanvas();
+    }
+
+    function toggleGuides() {
+      state.showGuides = !state.showGuides;
+      if (state.showGuides) {
+        dom.btnToggleGuides.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'dark:bg-indigo-500/20', 'dark:text-indigo-300', 'dark:border-indigo-500/50');
+        dom.guideStatusDot.classList.remove('bg-slate-400');
+        dom.guideStatusDot.classList.add('bg-indigo-500');
+        dom.guideStatusText.textContent = '가이드선 ON';
+      } else {
+        dom.btnToggleGuides.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'dark:bg-indigo-500/20', 'dark:text-indigo-300', 'dark:border-indigo-500/50');
+        dom.guideStatusDot.classList.remove('bg-indigo-500');
+        dom.guideStatusDot.classList.add('bg-slate-400');
+        dom.guideStatusText.textContent = '가이드선 OFF';
+      }
+      renderCanvas();
+    }
+
+    // ==================== HIT TESTING & HANDLES ====================
+    function getBoxHandles(box) {
+      const x1 = box.x, y1 = box.y, x2 = box.x + box.w, y2 = box.y + box.h;
+      const xm = (x1 + x2) / 2, ym = (y1 + y2) / 2;
+      return [
+        { id: 'nw', x: x1, y: y1, cursor: 'nwse-resize' },
+        { id: 'n',  x: xm, y: y1, cursor: 'ns-resize' },
+        { id: 'ne', x: x2, y: y1, cursor: 'nesw-resize' },
+        { id: 'e',  x: x2, y: ym, cursor: 'ew-resize' },
+        { id: 'se', x: x2, y: y2, cursor: 'nwse-resize' },
+        { id: 's',  x: xm, y: y2, cursor: 'ns-resize' },
+        { id: 'sw', x: x1, y: y2, cursor: 'nesw-resize' },
+        { id: 'w',  x: x1, y: ym, cursor: 'ew-resize' },
+      ];
+    }
+
+    function getCanvasCoords(e) {
+      const rect = dom.mainCanvas.getBoundingClientRect();
+      const scaleX = dom.mainCanvas.width / rect.width;
+      const scaleY = dom.mainCanvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY,
+      };
+    }
+
+    function hitTestHandle(box, px, py) {
+      const tol = 10 / state.zoom;
+      for (const h of getBoxHandles(box)) {
+        if (Math.abs(px - h.x) <= tol && Math.abs(py - h.y) <= tol) {
+          return h;
+        }
+      }
+      return null;
+    }
+
+    function hitTestBox(slide, px, py) {
+      for (let i = slide.boxes.length - 1; i >= 0; i--) {
+        const b = slide.boxes[i];
+        if (b.hidden) continue;
+        if (px >= b.x && px <= b.x + b.w && py >= b.y && py <= b.y + b.h) {
+          return b;
+        }
+      }
+      return null;
+    }
+
+    // ==================== GEMINI AI VISION & OCR RESTORATION ====================
+    function getCroppedRegionBase64(slide, box) {
+      const scale = 2;
+      const pad = 8;
+      const sx = clamp(Math.floor(box.x - pad), 0, slide.width - 1);
+      const sy = clamp(Math.floor(box.y - pad), 0, slide.height - 1);
+      const sw = clamp(Math.ceil(box.w + pad * 2), 1, slide.width - sx);
+      const sh = clamp(Math.ceil(box.h + pad * 2), 1, slide.height - sy);
+
+      const c = document.createElement('canvas');
+      c.width = sw * scale;
+      c.height = sh * scale;
+      const cctx = c.getContext('2d');
+      cctx.imageSmoothingEnabled = true;
+      cctx.imageSmoothingQuality = 'high';
+      cctx.drawImage(slide.img, sx, sy, sw, sh, 0, 0, c.width, c.height);
+      return c.toDataURL('image/jpeg', 0.92).split(',')[1];
+    }
+
+    function getFullSlideBase64(slide) {
+      const maxDim = 1024;
+      const ratio = Math.min(1, maxDim / Math.max(slide.width, slide.height));
+      const c = document.createElement('canvas');
+      c.width = Math.round(slide.width * ratio);
+      c.height = Math.round(slide.height * ratio);
+      const cctx = c.getContext('2d');
+      cctx.drawImage(slide.img, 0, 0, c.width, c.height);
+      return c.toDataURL('image/jpeg', 0.82).split(',')[1];
+    }
+
+    async function callGeminiWithRetry(payload, retries = 2) {
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        const err = new Error('Gemini API 키가 등록되지 않았습니다.');
+        err.code = 'NO_API_KEY';
+        throw err;
+      }
+
+      let lastErr = null;
+      for (const model of GEMINI_MODELS) {
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        let delay = 900;
+        let modelMissing = false;
+
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          try {
+            const res = await fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload),
+            });
+            if (!res.ok) {
+              const body = await res.text().catch(() => '');
+              const err = new Error(`HTTP ${res.status} ${body.slice(0, 160)}`.trim());
+              err.status = res.status;
+              /* 잘못된 키·권한은 재시도해도 같다 */
+              if (res.status === 400 || res.status === 401 || res.status === 403) err.fatal = true;
+              if (res.status === 404) modelMissing = true;
+              throw err;
+            }
+            return await res.json();
+          } catch (err) {
+            lastErr = err;
+            if (err.fatal || modelMissing || attempt === retries) break;
+            await new Promise(r => setTimeout(r, delay));
+            delay *= 2;
+          }
+        }
+
+        if (!modelMissing) break;
+      }
+      throw lastErr || new Error('AI 호출에 실패했습니다.');
+    }
+
+    /* 키 없이도 쓸 수 있는 오프라인 OCR (Tesseract.js · 한국어+영어) */
+    async function ocrBoxRegion(slide, box) {
+      if (!window.Tesseract) throw new Error('OCR_ENGINE_MISSING');
+      const cropB64 = 'data:image/jpeg;base64,' + getCroppedRegionBase64(slide, box);
+      let lastPct = -20;
+      const res = await Tesseract.recognize(cropB64, 'kor+eng', {
+        logger: (m) => {
+          if (m && m.status === 'recognizing text' && typeof m.progress === 'number') {
+            const pct = Math.round(m.progress * 100);
+            if (pct - lastPct >= 20 || pct >= 100) {
+              lastPct = pct;
+              setLoading(true, '오프라인 OCR로 글자 인식 중...', `인식률 ${pct}% · 처음에는 인식 모델을 내려받아 조금 걸릴 수 있어요.`);
+            }
+          } else if (m && /loading|initializ/i.test(m.status || '')) {
+            setLoading(true, '오프라인 OCR로 글자 인식 중...', '한국어·영어 인식 모델을 준비하고 있습니다.');
+          }
+        },
+      });
+      return String(res?.data?.text || '').replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n').trim();
+    }
+
+    async function applyOfflineOcr(slide, box) {
+      setLoading(true, '오프라인 OCR로 글자 인식 중...', '한국어·영어 모델을 준비하고 있습니다. 처음에는 조금 걸릴 수 있어요.');
+      try {
+        const text = await ocrBoxRegion(slide, box);
+        if (!text) throw new Error('EMPTY_OCR');
+        pushUndoState(slide);
+        box.text = text;
+        autoFitBoxFontSize(box);
+        syncAllUI();
+        showToast('오프라인 OCR로 인식했습니다. 문맥 자동 보정은 상단 🔑 AI 키 등록 시 사용 가능합니다.', 'info');
+      } catch (err) {
+        showToast('글자를 인식하지 못했습니다. 영역을 다시 잡거나 텍스트를 직접 입력해 주세요.', 'warn');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function restoreBoxWithAI(box, manualHintText = '') {
+      const slide = getCurrentSlide();
+      if (!slide || !box) return;
+
+      if (!getApiKey()) {
+        await applyOfflineOcr(slide, box);
+        return;
+      }
+
+      setLoading(true, 'AI 문맥 분석 및 한글 복원 중...', '슬라이드 전체 문맥을 파악해 깨진 글자를 복원하고 있습니다.');
+      try {
+        const cropB64 = getCroppedRegionBase64(slide, box);
+        const fullB64 = getFullSlideBase64(slide);
+
+        const prompt = `당신은 NotebookLM 슬라이드/인포그래픽의 깨진 한글(□, ?, 깨진 자모, 외계어 등)을 완벽한 자연어 한국어로 복원하는 전문가입니다.
+첫 번째 이미지는 사용자가 선택한 특정 텍스트 영역(2배 확대본)이고, 두 번째 이미지는 슬라이드 전체 화면입니다.
+${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manualHintText}"` : ''}
+슬라이드 전체 주제와 앞뒤 문맥을 분석하여:
+1. detectedBrokenText: 선택 영역에 보이는 원래의 깨진 텍스트를 그대로 적으세요.
+2. restoredText: 깨진 글자를 문맥에 가장 자연스럽게 복원한 최종 한국어 문장/단어.
+3. correctionNote: 어떤 깨진 부분이 어떻게 복원되었는지 짧은 요약 (예: "자□화 → 자동화, 트?드 → 트렌드").
+4. candidates: restoredText를 포함해 문맥상 자연스러운 추천 문구 후보 3개 배열.`;
+
+        const payload = {
+          contents: [{
+            role: 'user',
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType: 'image/jpeg', data: cropB64 } },
+              { inlineData: { mimeType: 'image/jpeg', data: fullB64 } }
+            ]
+          }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'OBJECT',
+              properties: {
+                detectedBrokenText: { type: 'STRING' },
+                restoredText: { type: 'STRING' },
+                correctionNote: { type: 'STRING' },
+                candidates: {
+                  type: 'ARRAY',
+                  items: { type: 'STRING' }
+                }
+              },
+              required: ['detectedBrokenText', 'restoredText', 'correctionNote', 'candidates']
+            }
+          }
+        };
+
+        const result = await callGeminiWithRetry(payload);
+        const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!jsonText) throw new Error('Empty AI response');
+        const parsed = JSON.parse(jsonText);
+
+        pushUndoState(slide);
+        box.text = parsed.restoredText || box.text;
+        box.aiMeta = {
+          detected: parsed.detectedBrokenText || '',
+          note: parsed.correctionNote || '',
+          candidates: Array.isArray(parsed.candidates) ? parsed.candidates.slice(0, 3) : [],
+        };
+        autoFitBoxFontSize(box);
+        syncAllUI();
+        showToast('AI 문맥 복원 완료!', 'success');
+      } catch (err) {
+        // AI 키 문제이거나 API 실패 → 오프라인 OCR로 폴백
+        try {
+          const text = await ocrBoxRegion(slide, box);
+          if (text) {
+            pushUndoState(slide);
+            box.text = text;
+            autoFitBoxFontSize(box);
+            syncAllUI();
+            showToast(
+              err && err.fatal
+                ? 'AI 키가 유효하지 않아 오프라인 OCR로 인식했습니다. 상단 🔑 AI 키를 확인해 주세요.'
+                : 'AI 복원에 실패해 오프라인 OCR로 인식했습니다. 문맥 자동 보정은 상단 🔑 AI 키 등록 시 사용 가능합니다.',
+              'warn'
+            );
+            return;
+          }
+        } catch (_) {}
+        showToast('텍스트를 직접 입력하거나 다시 시도해 주세요.', 'warn');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    async function autoScanEntireSlideWithAI() {
+      const slide = getCurrentSlide();
+      if (!slide) {
+        showToast('먼저 슬라이드 파일을 열어주세요.', 'warn');
+        return;
+      }
+
+      if (!getApiKey()) {
+        const go = await askConfirm(
+          'AI 키가 필요합니다',
+          '전체 자동 탐지는 Gemini Vision이 필요합니다. 지금 🔑 AI 키를 등록할까요? 키 없이도 영역을 직접 드래그하면 오프라인 OCR로 글자를 인식합니다.'
+        );
+        if (go) openKeyModal();
+        else showToast('영역을 직접 드래그하면 오프라인 OCR로 인식합니다.', 'info');
+        return;
+      }
+
+      setLoading(true, 'AI 전체 슬라이드 깨진 글자 탐지 중...', '깨진 한글(□, ?) 영역을 찾아 한 번에 복원합니다.');
+      try {
+        const fullB64 = getFullSlideBase64(slide);
+        const prompt = `이 슬라이드 이미지에서 한글 폰트가 깨져서 표시된 영역(예: □, ?, 깨진 문자, 이상한 기호가 섞인 텍스트 줄)을 모두 찾아주세요.
+정상적으로 출력된 텍스트는 제외하고, 깨진 문자가 포함된 텍스트 줄이나 블록만 찾아서 0~1000 정규화 좌표(ymin, xmin, ymax, xmax)와 문맥상 복원된 올바른 한국어 텍스트(restoredText), 원본 깨진 텍스트(detectedBrokenText)를 반환하세요.`;
+
+        const payload = {
+          contents: [{
+            role: 'user',
+            parts: [
+              { text: prompt },
+              { inlineData: { mimeType: 'image/jpeg', data: fullB64 } }
+            ]
+          }],
+          generationConfig: {
+            responseMimeType: 'application/json',
+            responseSchema: {
+              type: 'ARRAY',
+              items: {
+                type: 'OBJECT',
+                properties: {
+                  ymin: { type: 'NUMBER' },
+                  xmin: { type: 'NUMBER' },
+                  ymax: { type: 'NUMBER' },
+                  xmax: { type: 'NUMBER' },
+                  detectedBrokenText: { type: 'STRING' },
+                  restoredText: { type: 'STRING' }
+                },
+                required: ['ymin', 'xmin', 'ymax', 'xmax', 'detectedBrokenText', 'restoredText']
+              }
+            }
+          }
+        };
+
+        const result = await callGeminiWithRetry(payload);
+        const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!jsonText) throw new Error('Empty scan response');
+        const items = JSON.parse(jsonText);
+
+        if (!Array.isArray(items) || items.length === 0) {
+          showToast('깨진 글자 영역이 발견되지 않았습니다.', 'info');
+          return;
+        }
+
+        pushUndoState(slide);
+        let added = 0;
+        for (const item of items) {
+          const x = Math.round((clamp(item.xmin, 0, 1000) / 1000) * slide.width);
+          const y = Math.round((clamp(item.ymin, 0, 1000) / 1000) * slide.height);
+          const w = Math.max(40, Math.round(((clamp(item.xmax, 0, 1000) - clamp(item.xmin, 0, 1000)) / 1000) * slide.width));
+          const h = Math.max(22, Math.round(((clamp(item.ymax, 0, 1000) - clamp(item.ymin, 0, 1000)) / 1000) * slide.height));
+
+          const colors = analyzeRegionColors(slide, x, y, w, h);
+          const box = createDefaultBox(x, y, w, h, colors, item.restoredText || '');
+          box.aiMeta = {
+            detected: item.detectedBrokenText || '',
+            note: `${item.detectedBrokenText || ''} → ${item.restoredText || ''}`,
+            candidates: item.restoredText ? [item.restoredText] : [],
+          };
+          autoFitBoxFontSize(box);
+          slide.boxes.push(box);
+          state.selectedBoxId = box.id;
+          added++;
+        }
+
+        syncAllUI();
+        showToast(`${added}개의 깨진 글자 영역을 자동 복원했습니다!`, 'success');
+      } catch (err) {
+        if (err && err.fatal) {
+          showToast('AI 키가 유효하지 않습니다. 상단 🔑 AI 키를 확인하거나, 영역을 직접 드래그해 오프라인 OCR로 인식하세요.', 'warn');
+        } else {
+          showToast('자동 탐지 중 일시적 오류가 발생했습니다. 영역을 직접 드래그해 보세요.', 'warn');
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function createDefaultBox(x, y, w, h, colors, text = '수정할 텍스트') {
+      return {
+        id: uid(),
+        x: Math.round(x),
+        y: Math.round(y),
+        w: Math.round(w),
+        h: Math.round(h),
+        text,
+        fontFamily: 'Pretendard',
+        fontSize: clamp(Math.round(h * 0.62), 14, 96),
+        fontWeight: '700',
+        italic: false,
+        shadow: false,
+        align: 'left',
+        vAlign: 'middle',
+        lineHeight: 1.25,
+        letterSpacing: 0,
+        textColor: colors.textColor || '#1e293b',
+        bgMode: 'auto',
+        bgColor: colors.bgColor || '#ffffff',
+        gradientType: colors.gradientType || 'solid',
+        gradStart: colors.gradStart || '#ffffff',
+        gradEnd: colors.gradEnd || '#ffffff',
+        padding: 2,
+        radius: 4,
+        hidden: false,
+        aiMeta: null,
+      };
+    }
+
+    // ==================== FILE IMPORT & SAMPLE SLIDE ====================
+    function loadImageElement(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function generateThumbnailDataUrl(slide) {
+      const thumbW = 240;
+      const thumbH = Math.round((slide.height / slide.width) * thumbW);
+      const c = document.createElement('canvas');
+      c.width = thumbW;
+      c.height = thumbH;
+      const tctx = c.getContext('2d');
+      tctx.save();
+      tctx.scale(thumbW / slide.width, thumbH / slide.height);
+      renderSlideToContext(tctx, slide, { includeGuides: false, selectedBoxId: null });
+      tctx.restore();
+      return c.toDataURL('image/jpeg', 0.78);
+    }
+
+    function scheduleThumbnailUpdate() {
+      clearTimeout(state.thumbTimer);
+      state.thumbTimer = setTimeout(() => {
+        const slide = getCurrentSlide();
+        if (!slide) return;
+        slide.thumbUrl = generateThumbnailDataUrl(slide);
+        renderSlideList();
+      }, 280);
+    }
+
+    async function createBuiltInSampleSlide() {
+      const w = 1280;
+      const h = 720;
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      const sctx = c.getContext('2d');
+
+      // Subtle gradient slide background
+      const bgGrad = sctx.createLinearGradient(0, 0, w, h);
+      bgGrad.addColorStop(0, '#f8fafc');
+      bgGrad.addColorStop(1, '#e2e8f0');
+      sctx.fillStyle = bgGrad;
+      sctx.fillRect(0, 0, w, h);
+
+      // Top accent bar
+      sctx.fillStyle = '#4f46e5';
+      sctx.fillRect(64, 58, 72, 6);
+
+      // Header Badge
+      sctx.fillStyle = '#4f46e5';
+      sctx.font = '700 18px Pretendard, sans-serif';
+      sctx.fillText('NOTEBOOKLM SUMMARY · 2026 STRATEGY', 64, 96);
+
+      // Broken Title (Intentional garbled glyphs)
+      sctx.fillStyle = '#0f172a';
+      sctx.font = '800 44px Pretendard, sans-serif';
+      sctx.fillText('2026 생성형 AI 업무 자□화 핵심 트?드', 64, 156);
+
+      // Cards
+      const cards = [
+        {
+          x: 64, y: 215, w: 560, h: 205,
+          badge: '01 · DATA INSIGHT',
+          title: '문서 요약 및 데□터 분석 효율 320% 향상',
+          desc: '방대한 리서치 자료를 즉시 구조화하여 의사결정 속도 극대화'
+        },
+        {
+          x: 656, y: 215, w: 560, h: 205,
+          badge: '02 · WORKFLOW',
+          title: '보고서 초안 작□ 시간 75% 단축',
+          desc: '핵심 근거 기반 슬라이드 자동 생성 및 실무 파이프라인 연동'
+        },
+        {
+          x: 64, y: 448, w: 1152, h: 196,
+          badge: '03 · ACTION PLAN',
+          title: '부서별 맞춤형 AI 에□전트 도입 로드맵',
+          desc: '파일럿 검증 → 보안 가이드라인 수립 → 전사 확산 단계별 실행 전략'
+        }
+      ];
+
+      for (const card of cards) {
+        sctx.fillStyle = '#ffffff';
+        drawRoundedRect(sctx, card.x, card.y, card.w, card.h, 18);
+        sctx.fill();
+        sctx.strokeStyle = '#cbd5e1';
+        sctx.lineWidth = 1.5;
+        sctx.stroke();
+
+        sctx.fillStyle = '#6366f1';
+        sctx.font = '700 15px Pretendard, sans-serif';
+        sctx.fillText(card.badge, card.x + 28, card.y + 42);
+
+        sctx.fillStyle = '#1e293b';
+        sctx.font = '700 27px Pretendard, sans-serif';
+        sctx.fillText(card.title, card.x + 28, card.y + 92);
+
+        sctx.fillStyle = '#475569';
+        sctx.font = '400 19px Pretendard, sans-serif';
+        sctx.fillText(card.desc, card.x + 28, card.y + 142);
+      }
+
+      const dataUrl = c.toDataURL('image/png');
+      const img = await loadImageElement(dataUrl);
+      const slide = {
+        id: uid(),
+        name: '샘플_노트북LM_슬라이드.png',
+        width: w,
+        height: h,
+        img,
+        dataUrl,
+        boxes: [],
+        undoStack: [],
+        redoStack: [],
+        thumbUrl: '',
+      };
+      slide.thumbUrl = generateThumbnailDataUrl(slide);
+      state.slides = [slide];
+      state.currentSlideIndex = 0;
+      state.selectedBoxId = null;
+      fitZoomToStage();
+      syncAllUI();
+    }
+
+    async function handleFilesUpload(fileList) {
+      if (!fileList || fileList.length === 0) return;
+      setLoading(true, '파일 불러오는 중...', '고해상도 슬라이드로 변환하고 있습니다.');
+      try {
+        const addedSlides = [];
+        const files = Array.from(fileList);
+        for (let fileIdx = 0; fileIdx < files.length; fileIdx++) {
+          const file = files[fileIdx];
+          if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            const buf = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+              setLoading(true, `PDF 변환 중 (${pageNum} / ${pdf.numPages})...`, `${file.name} · 페이지를 고화질 이미지로 변환하고 있습니다.`);
+              const page = await pdf.getPage(pageNum);
+              const viewport = page.getViewport({ scale: 2.0 });
+              const c = document.createElement('canvas');
+              c.width = Math.round(viewport.width);
+              c.height = Math.round(viewport.height);
+              await page.render({ canvasContext: c.getContext('2d'), viewport }).promise;
+              const dataUrl = c.toDataURL('image/png');
+              const img = await loadImageElement(dataUrl);
+              const slide = {
+                id: uid(),
+                name: `${file.name.replace(/\.pdf$/i, '')} (${pageNum}/${pdf.numPages})`,
+                width: c.width,
+                height: c.height,
+                img,
+                dataUrl,
+                boxes: [],
+                undoStack: [],
+                redoStack: [],
+                thumbUrl: '',
+              };
+              slide.thumbUrl = generateThumbnailDataUrl(slide);
+              addedSlides.push(slide);
+            }
+          } else if (file.type.startsWith('image/')) {
+            setLoading(true, files.length > 1 ? `이미지 불러오는 중 (${fileIdx + 1} / ${files.length})...` : '이미지 불러오는 중...', file.name);
+            const dataUrl = await new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+            const img = await loadImageElement(dataUrl);
+            const slide = {
+              id: uid(),
+              name: file.name,
+              width: img.naturalWidth || img.width,
+              height: img.naturalHeight || img.height,
+              img,
+              dataUrl,
+              boxes: [],
+              undoStack: [],
+              redoStack: [],
+              thumbUrl: '',
+            };
+            slide.thumbUrl = generateThumbnailDataUrl(slide);
+            addedSlides.push(slide);
+          }
+        }
+
+        if (addedSlides.length > 0) {
+          const prevLen = state.slides.length;
+          state.slides.push(...addedSlides);
+          state.currentSlideIndex = prevLen;
+          state.selectedBoxId = null;
+          fitZoomToStage();
+          syncAllUI();
+          showToast(`${addedSlides.length}개의 슬라이드를 불러왔습니다.`, 'success');
+        }
+      } catch (err) {
+        showToast('파일을 읽는 중 오류가 발생했습니다.', 'error');
+      } finally {
+        setLoading(false);
+        dom.fileInput.value = '';
+      }
+    }
+
+    async function closeEntireProject() {
+      if (state.slides.length === 0) {
+        showToast('닫을 작업 파일이 없습니다.');
+        return;
+      }
+      const hasEdits = state.slides.some(s => s.boxes.length > 0);
+      if (hasEdits) {
+        const ok = await askConfirm('작업 닫기', '현재 작업 중인 슬라이드와 수정 레이어를 모두 닫으시겠습니까?');
+        if (!ok) return;
+      }
+      state.slides = [];
+      state.currentSlideIndex = -1;
+      state.selectedBoxId = null;
+      syncAllUI();
+      showToast('작업을 닫았습니다.');
+    }
+
+    async function closeSingleSlide(index) {
+      if (index < 0 || index >= state.slides.length) return;
+      const target = state.slides[index];
+      if (target.boxes.length > 0) {
+        const ok = await askConfirm('슬라이드 닫기', `"${target.name}" 슬라이드를 닫으시겠습니까?`);
+        if (!ok) return;
+      }
+      state.slides.splice(index, 1);
+      if (state.slides.length === 0) {
+        state.currentSlideIndex = -1;
+        state.selectedBoxId = null;
+      } else {
+        state.currentSlideIndex = clamp(state.currentSlideIndex, 0, state.slides.length - 1);
+        state.selectedBoxId = null;
+        if (state.autoFitZoom) fitZoomToStage();
+      }
+      syncAllUI();
+    }
+
+    // ==================== SIDEBAR & INSPECTOR UI SYNC ====================
+    function renderSlideList() {
+      dom.slideCountLabel.textContent = state.slides.length;
+      dom.slideListContainer.innerHTML = '';
+
+      if (state.slides.length === 0) {
+        dom.slideListContainer.innerHTML = '<div class="text-center text-[11px] text-slate-400 py-6">열린 슬라이드가 없습니다</div>';
+        return;
+      }
+
+      state.slides.forEach((slide, idx) => {
+        const isActive = idx === state.currentSlideIndex;
+        const card = document.createElement('div');
+        card.className = `group relative rounded-xl border p-1.5 cursor-pointer transition ${
+          isActive
+            ? 'border-indigo-500 bg-indigo-500/10 ring-1 ring-indigo-500/40'
+            : 'border-slate-200 dark:border-studio-border bg-slate-50/60 dark:bg-studio-card/50 hover:border-slate-300 dark:hover:border-slate-600'
+        }`;
+
+        card.innerHTML = `
+          <div class="relative rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-800 aspect-video mb-1.5">
+            <img src="${slide.thumbUrl}" alt="${slide.name}" class="w-full h-full object-contain" />
+            <span class="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-slate-900/80 text-white text-[10px] font-bold">${idx + 1}</span>
+            ${slide.boxes.length > 0 ? `<span class="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-indigo-600/90 text-white text-[10px] font-semibold">수정 ${slide.boxes.length}</span>` : ''}
+            <button type="button" data-close-slide="${idx}" class="opacity-90 sm:opacity-0 sm:group-hover:opacity-100 absolute top-1 right-1 w-5 h-5 rounded-md bg-slate-900/80 hover:bg-rose-600 text-white flex items-center justify-center text-xs transition" title="이 슬라이드 닫기">×</button>
+          </div>
+          <div class="text-[11px] font-medium truncate px-0.5">${slide.name}</div>
+        `;
+
+        card.addEventListener('click', (e) => {
+          const closeBtn = e.target.closest('[data-close-slide]');
+          if (closeBtn) {
+            e.stopPropagation();
+            closeSingleSlide(Number(closeBtn.dataset.closeSlide));
+            return;
+          }
+          state.currentSlideIndex = idx;
+          state.selectedBoxId = null;
+          state.isTextEditingSession = false;
+          if (state.autoFitZoom) fitZoomToStage();
+          syncAllUI();
+        });
+
+        dom.slideListContainer.appendChild(card);
+      });
+    }
+
+    function renderLayerList() {
+      const slide = getCurrentSlide();
+      const boxes = slide ? slide.boxes : [];
+      dom.layerCountLabel.textContent = boxes.length;
+      dom.layerListContainer.innerHTML = '';
+
+      if (boxes.length === 0) {
+        dom.layerListContainer.innerHTML = '<div class="text-center text-[11px] text-slate-400 py-4">드래그하여 수정 영역을 추가하세요</div>';
+        return;
+      }
+
+      [...boxes].reverse().forEach((box) => {
+        const isSelected = box.id === state.selectedBoxId;
+        const row = document.createElement('div');
+        row.className = `flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs cursor-pointer transition ${
+          isSelected
+            ? 'border-indigo-500 bg-indigo-500/15 font-semibold'
+            : 'border-transparent hover:bg-slate-100 dark:hover:bg-studio-card'
+        }`;
+
+        const previewText = (box.text || '(빈 텍스트)').replace(/\n/g, ' ');
+        row.innerHTML = `
+          <span class="truncate flex-1 ${box.hidden ? 'line-through opacity-45' : ''}">${previewText}</span>
+          <div class="flex items-center gap-0.5 shrink-0">
+            <button type="button" data-toggle-hide="${box.id}" class="p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-white" title="${box.hidden ? '보이기' : '숨기기'}">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="${box.hidden ? 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18' : 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'}"/></svg>
+            </button>
+            <button type="button" data-del-layer="${box.id}" class="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-500" title="이 영역만 삭제">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        `;
+
+        row.addEventListener('click', (e) => {
+          const hideBtn = e.target.closest('[data-toggle-hide]');
+          if (hideBtn) {
+            e.stopPropagation();
+            pushUndoState(slide);
+            box.hidden = !box.hidden;
+            syncAllUI();
+            return;
+          }
+          const delBtn = e.target.closest('[data-del-layer]');
+          if (delBtn) {
+            e.stopPropagation();
+            deleteBoxById(box.id);
+            return;
+          }
+          state.selectedBoxId = box.id;
+          state.isTextEditingSession = false;
+          syncAllUI();
+        });
+
+        dom.layerListContainer.appendChild(row);
+      });
+    }
+
+    function syncInspectorUI() {
+      const box = getSelectedBox();
+      if (!box) {
+        dom.inspectorEmpty.classList.remove('hidden');
+        dom.inspectorForm.classList.add('hidden');
+        return;
+      }
+
+      dom.inspectorEmpty.classList.add('hidden');
+      dom.inspectorForm.classList.remove('hidden');
+
+      if (document.activeElement !== dom.propText) {
+        dom.propText.value = box.text || '';
+      }
+
+      // AI Suggestions
+      if (box.aiMeta && (box.aiMeta.note || (box.aiMeta.candidates && box.aiMeta.candidates.length > 0))) {
+        dom.aiSuggestionBox.classList.remove('hidden');
+        dom.aiDiffBadge.textContent = box.aiMeta.note || '';
+        dom.aiCandidatesList.innerHTML = '';
+        (box.aiMeta.candidates || []).forEach((cand) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = `px-2.5 py-1 rounded-lg text-[11px] font-medium border transition text-left ${
+            box.text === cand
+              ? 'bg-indigo-600 text-white border-indigo-600'
+              : 'bg-white dark:bg-studio-card border-slate-200 dark:border-studio-border hover:border-indigo-400'
+          }`;
+          chip.textContent = cand;
+          chip.addEventListener('click', () => {
+            pushUndoState();
+            box.text = cand;
+            autoFitBoxFontSize(box);
+            syncAllUI();
+          });
+          dom.aiCandidatesList.appendChild(chip);
+        });
+      } else {
+        dom.aiSuggestionBox.classList.add('hidden');
+      }
+
+      dom.propFontFamily.value = box.fontFamily || 'Pretendard';
+      dom.propFontSize.value = box.fontSize || 28;
+      dom.propFontWeight.value = String(box.fontWeight || '700');
+      dom.propItalic.checked = Boolean(box.italic);
+      dom.propShadow.checked = Boolean(box.shadow);
+
+      document.querySelectorAll('.align-btn').forEach((btn) => {
+        const active = btn.dataset.align === (box.align || 'left');
+        btn.className = `align-btn py-1 rounded-lg text-[11px] font-semibold transition ${
+          active ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs' : 'text-slate-500'
+        }`;
+      });
+
+      document.querySelectorAll('.valign-btn').forEach((btn) => {
+        const active = btn.dataset.valign === (box.vAlign || 'middle');
+        btn.className = `valign-btn py-1 rounded-lg text-[11px] font-semibold transition ${
+          active ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-xs' : 'text-slate-500'
+        }`;
+      });
+
+      dom.propLineHeight.value = box.lineHeight || 1.25;
+      dom.valLineHeight.textContent = Number(box.lineHeight || 1.25).toFixed(2);
+      dom.propLetterSpacing.value = box.letterSpacing || 0;
+      dom.valLetterSpacing.textContent = box.letterSpacing || 0;
+
+      dom.propTextColor.value = box.textColor || '#1e293b';
+      dom.propTextColorHex.value = (box.textColor || '#1e293b').toUpperCase();
+
+      dom.propBgMode.value = box.bgMode || 'auto';
+      dom.bgSolidRow.style.display = box.bgMode === 'transparent' ? 'none' : 'block';
+      dom.propBgColor.value = box.bgColor || '#ffffff';
+      dom.propBgColorHex.value = (box.bgColor || '#ffffff').toUpperCase();
+
+      dom.propPadding.value = box.padding ?? 2;
+      dom.valPadding.textContent = (box.padding ?? 2) + 'px';
+      dom.propRadius.value = box.radius ?? 4;
+      dom.valRadius.textContent = (box.radius ?? 4) + 'px';
+    }
+
+    function syncAllUI() {
+      renderCanvas();
+      renderSlideList();
+      renderLayerList();
+      syncInspectorUI();
+      updateUndoRedoButtons();
+      scheduleThumbnailUpdate();
+    }
+
+    // ==================== BOX OPERATIONS ====================
+    function deleteBoxById(boxId) {
+      const slide = getCurrentSlide();
+      if (!slide) return;
+      const idx = slide.boxes.findIndex(b => b.id === boxId);
+      if (idx === -1) return;
+      pushUndoState(slide);
+      slide.boxes.splice(idx, 1);
+      if (state.selectedBoxId === boxId) {
+        state.selectedBoxId = null;
+      }
+      state.isTextEditingSession = false;
+      syncAllUI();
+      showToast('선택한 수정 영역이 삭제되었습니다.');
+    }
+
+    function duplicateSelectedBox() {
+      const slide = getCurrentSlide();
+      const box = getSelectedBox();
+      if (!slide || !box) return;
+      pushUndoState(slide);
+      const copy = JSON.parse(JSON.stringify(box));
+      copy.id = uid();
+      copy.x = clamp(copy.x + 20, 0, Math.max(0, slide.width - copy.w));
+      copy.y = clamp(copy.y + 20, 0, Math.max(0, slide.height - copy.h));
+      slide.boxes.push(copy);
+      state.selectedBoxId = copy.id;
+      syncAllUI();
+      showToast('영역이 복제되었습니다.');
+    }
+
+    /* 🧹 글자 지우기 — 텍스트를 비우고 주변 배경색(또는 그라데이션)으로 깔끔하게 덮는다 */
+    function clearBoxContent(box, slide = getCurrentSlide()) {
+      if (!slide || !box) return;
+      pushUndoState(slide);
+      const sampled = analyzeRegionColors(slide, box.x, box.y, box.w, box.h);
+      box.text = '';
+      box.bgMode = 'auto';
+      box.bgColor = sampled.bgColor;
+      box.gradientType = sampled.gradientType;
+      box.gradStart = sampled.gradStart;
+      box.gradEnd = sampled.gradEnd;
+      box.aiMeta = null;
+      state.isTextEditingSession = false;
+      syncAllUI();
+      showToast('글자를 지우고 주변 배경색으로 덮었습니다.', 'success');
+    }
+
+    /* ✏️ 선택 / ✋ 이동(패닝) 모드 */
+    function setCanvasMode(mode) {
+      state.canvasMode = mode === 'pan' ? 'pan' : 'select';
+      const pan = state.canvasMode === 'pan';
+      if (state.interaction && state.interaction.type !== 'pan') state.interaction = null;
+      dom.mainCanvas.classList.toggle('mode-pan', pan);
+      dom.mainCanvas.style.touchAction = pan ? 'pan-x pan-y' : 'none';
+      dom.mainCanvas.style.cursor = pan ? 'grab' : 'crosshair';
+
+      [[dom.btnModeSelect, 'select'], [dom.btnModePan, 'pan']].forEach(([btn, id]) => {
+        if (!btn) return;
+        const on = state.canvasMode === id;
+        btn.classList.toggle('is-active', on);
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+
+      if (dom.modeHintText) {
+        dom.modeHintText.innerHTML = pan
+          ? '✋ 이동 모드 · 손가락이나 마우스로 슬라이드를 끌어 화면을 옮깁니다'
+          : '드래그하여 영역 지정 · 빈 곳 클릭 또는 <kbd class="px-1 py-0.5 rounded bg-slate-100 dark:bg-studio-card border border-slate-200 dark:border-studio-border text-[10px]">Esc</kbd> 해제';
+      }
+      if (pan) {
+        state.eyedropperTarget = null;
+        state.selectedBoxId = null;
+        state.isTextEditingSession = false;
+        syncAllUI();
+      }
+    }
+
+    function ensureTextEditUndoPoint() {
+      if (!state.isTextEditingSession) {
+        pushUndoState();
+        state.isTextEditingSession = true;
+      }
+    }
+
+    // ==================== EXPORT & PROJECT JSON ====================
+    function exportCurrentImage(format = 'png') {
+      const slide = getCurrentSlide();
+      if (!slide) {
+        showToast('내보낼 슬라이드가 없습니다.', 'warn');
+        return;
+      }
+      const out = document.createElement('canvas');
+      out.width = slide.width;
+      out.height = slide.height;
+      renderSlideToContext(out.getContext('2d'), slide, { includeGuides: false, selectedBoxId: null });
+
+      const mime = format === 'jpg' ? 'image/jpeg' : 'image/png';
+      const url = out.toDataURL(mime, 0.95);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${slide.name.replace(/\.[^/.]+$/, '')}_fixed.${format}`;
+      a.click();
+      showToast(`${format.toUpperCase()} 이미지로 내보냈습니다.`, 'success');
+    }
+
+    async function exportAllPdf() {
+      if (state.slides.length === 0) {
+        showToast('내보낼 슬라이드가 없습니다.', 'warn');
+        return;
+      }
+      setLoading(true, '고화질 PDF 생성 중...', '모든 슬라이드를 병합하고 있습니다.');
+      try {
+        const { jsPDF } = window.jspdf;
+        const first = state.slides[0];
+        const orientation = first.width >= first.height ? 'l' : 'p';
+        const pdf = new jsPDF({
+          orientation,
+          unit: 'px',
+          format: [first.width, first.height],
+        });
+
+        for (let i = 0; i < state.slides.length; i++) {
+          const slide = state.slides[i];
+          if (i > 0) {
+            pdf.addPage([slide.width, slide.height], slide.width >= slide.height ? 'l' : 'p');
+          }
+          const out = document.createElement('canvas');
+          out.width = slide.width;
+          out.height = slide.height;
+          renderSlideToContext(out.getContext('2d'), slide, { includeGuides: false, selectedBoxId: null });
+          const imgData = out.toDataURL('image/jpeg', 0.94);
+          pdf.addImage(imgData, 'JPEG', 0, 0, slide.width, slide.height);
+        }
+
+        pdf.save('SlideFix_Pro_Export.pdf');
+        showToast('전체 슬라이드 PDF 저장 완료!', 'success');
+      } catch (err) {
+        showToast('PDF 생성 중 오류가 발생했습니다.', 'error');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    function saveProjectJson() {
+      if (state.slides.length === 0) {
+        showToast('저장할 작업이 없습니다.', 'warn');
+        return;
+      }
+      const payload = {
+        version: '1.0',
+        slides: state.slides.map(s => ({
+          name: s.name,
+          width: s.width,
+          height: s.height,
+          dataUrl: s.dataUrl,
+          boxes: s.boxes,
+        })),
+      };
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'SlideFix_Project.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('프로젝트(.json)가 저장되었습니다.', 'success');
+    }
+
+    async function loadProjectJson(file) {
+      if (!file) return;
+      setLoading(true, '프로젝트 불러오는 중...', '저장된 레이어와 슬라이드를 복원합니다.');
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!data || !Array.isArray(data.slides)) throw new Error('Invalid project file');
+        const restored = [];
+        for (const s of data.slides) {
+          const img = await loadImageElement(s.dataUrl);
+          const slide = {
+            id: uid(),
+            name: s.name || '슬라이드',
+            width: s.width || img.width,
+            height: s.height || img.height,
+            img,
+            dataUrl: s.dataUrl,
+            boxes: Array.isArray(s.boxes) ? s.boxes : [],
+            undoStack: [],
+            redoStack: [],
+            thumbUrl: '',
+          };
+          slide.thumbUrl = generateThumbnailDataUrl(slide);
+          restored.push(slide);
+        }
+        state.slides = restored;
+        state.currentSlideIndex = restored.length > 0 ? 0 : -1;
+        state.selectedBoxId = null;
+        fitZoomToStage();
+        syncAllUI();
+        showToast('프로젝트를 불러왔습니다.', 'success');
+      } catch (err) {
+        showToast('유효하지 않은 프로젝트 파일입니다.', 'error');
+      } finally {
+        setLoading(false);
+        dom.jsonInput.value = '';
+      }
+    }
+
+    // ==================== EVENT BINDINGS ====================
+    function bindEvents() {
+      // Mobile Panel Toggles
+      dom.btnToggleLeftPanel.addEventListener('click', () => {
+        dom.rightSidebar.classList.add('translate-x-full');
+        dom.leftSidebar.classList.toggle('-translate-x-full');
+      });
+
+      dom.btnToggleRightPanel.addEventListener('click', () => {
+        dom.leftSidebar.classList.add('-translate-x-full');
+        dom.rightSidebar.classList.toggle('translate-x-full');
+      });
+
+      // Mobile / Tablet Inspector Close
+      dom.btnCloseInspector.addEventListener('click', () => {
+        dom.rightSidebar.classList.add('translate-x-full');
+      });
+
+      // ==================== GEMINI API KEY MODAL ====================
+      dom.btnOpenKeyModal.addEventListener('click', openKeyModal);
+      dom.btnCloseKeyModal.addEventListener('click', closeKeyModal);
+      dom.btnCancelKey.addEventListener('click', closeKeyModal);
+      dom.keyModal.addEventListener('click', (e) => {
+        if (e.target === dom.keyModal) closeKeyModal();
+      });
+      dom.btnSaveKey.addEventListener('click', () => {
+        const key = String(dom.keyInput.value || '').trim();
+        if (!key) {
+          showToast('API 키를 입력해 주세요.', 'warn');
+          dom.keyInput.focus();
+          return;
+        }
+        try {
+          localStorage.setItem(AI_KEY_STORAGE, key);
+          updateAiKeyUI();
+          closeKeyModal();
+          showToast('Gemini API 키를 저장했습니다. AI 문맥 복원이 활성화됩니다.', 'success');
+        } catch (_) {
+          showToast('이 브라우저에서는 키를 저장할 수 없습니다.', 'error');
+        }
+      });
+      dom.btnDeleteKey.addEventListener('click', () => {
+        try { localStorage.removeItem(AI_KEY_STORAGE); } catch (_) {}
+        updateAiKeyUI();
+        closeKeyModal();
+        showToast('API 키를 삭제했습니다. 오프라인 OCR 모드로 동작합니다.', 'info');
+      });
+
+      // ==================== CANVAS MODE & CLEAR ====================
+      dom.btnModeSelect.addEventListener('click', () => setCanvasMode('select'));
+      dom.btnModePan.addEventListener('click', () => setCanvasMode('pan'));
+      dom.fbClear.addEventListener('click', () => {
+        const box = getSelectedBox();
+        if (box) clearBoxContent(box);
+      });
+      dom.btnClearText.addEventListener('click', () => {
+        const box = getSelectedBox();
+        if (box) clearBoxContent(box);
+      });
+
+      // File & Project Controls
+      dom.fileInput.addEventListener('change', (e) => handleFilesUpload(e.target.files));
+      dom.jsonInput.addEventListener('change', (e) => loadProjectJson(e.target.files[0]));
+      dom.btnCloseProject.addEventListener('click', closeEntireProject);
+      dom.btnLoadSample.addEventListener('click', createBuiltInSampleSlide);
+
+      // Drag & Drop Files onto App
+      window.addEventListener('dragover', (e) => {
+        e.preventDefault();
+      });
+      window.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer?.files?.length > 0) {
+          handleFilesUpload(e.dataTransfer.files);
+        }
+      });
+
+      // Undo / Redo
+      dom.btnUndo.addEventListener('click', undo);
+      dom.btnRedo.addEventListener('click', redo);
+
+      // Original Comparison Hold
+      const startCompare = () => {
+        if (!getCurrentSlide()) return;
+        state.isComparingOriginal = true;
+        dom.btnCompareOriginal.classList.add('bg-indigo-600', 'text-white', 'border-indigo-600');
+        renderCanvas();
+      };
+      const endCompare = () => {
+        if (!state.isComparingOriginal) return;
+        state.isComparingOriginal = false;
+        dom.btnCompareOriginal.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-600');
+        renderCanvas();
+      };
+      dom.btnCompareOriginal.addEventListener('pointerdown', startCompare);
+      dom.btnCompareOriginal.addEventListener('pointerup', endCompare);
+      dom.btnCompareOriginal.addEventListener('pointerleave', endCompare);
+      dom.btnCompareOriginal.addEventListener('pointercancel', endCompare);
+
+      // Dropdown Menus
+      dom.btnProjectMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dom.exportDropdown.classList.add('hidden');
+        dom.projectDropdown.classList.toggle('hidden');
+      });
+      dom.btnExportMenu.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dom.projectDropdown.classList.add('hidden');
+        dom.exportDropdown.classList.toggle('hidden');
+      });
+      window.addEventListener('click', () => {
+        dom.projectDropdown.classList.add('hidden');
+        dom.exportDropdown.classList.add('hidden');
+      });
+
+      dom.btnSaveJson.addEventListener('click', saveProjectJson);
+      dom.btnExportPng.addEventListener('click', () => exportCurrentImage('png'));
+      dom.btnExportJpg.addEventListener('click', () => exportCurrentImage('jpg'));
+      dom.btnExportPdf.addEventListener('click', exportAllPdf);
+
+      // Theme Toggle
+      dom.btnToggleTheme.addEventListener('click', () => {
+        document.documentElement.classList.toggle('dark');
+      });
+
+      // Auto Scan Slide
+      dom.btnAutoScanSlide.addEventListener('click', autoScanEntireSlideWithAI);
+
+      // ==================== BOTTOM CONTROL BAR BUTTONS ====================
+      dom.btnZoomOut.addEventListener('click', () => setZoom(Math.round((state.zoom - 0.1) * 100) / 100, true));
+      dom.btnZoomIn.addEventListener('click', () => setZoom(Math.round((state.zoom + 0.1) * 100) / 100, true));
+      dom.btnZoomReset.addEventListener('click', () => setZoom(1.0, true));
+      dom.btnZoomFit.addEventListener('click', fitZoomToStage);
+      dom.btnToggleGuides.addEventListener('click', toggleGuides);
+
+      // Ctrl + Mouse Wheel Zoom
+      dom.stageContainer.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          e.preventDefault();
+          const delta = e.deltaY < 0 ? 0.08 : -0.08;
+          setZoom(Math.round((state.zoom + delta) * 100) / 100, true);
+        }
+      }, { passive: false });
+
+      // Click empty stage area around canvas to deselect active box (hides dashed outline immediately)
+      dom.stageContainer.addEventListener('pointerdown', (e) => {
+        if (e.target === dom.stageContainer || e.target === dom.canvasOuterFlex) {
+          if (state.selectedBoxId !== null) {
+            state.selectedBoxId = null;
+            state.isTextEditingSession = false;
+            syncAllUI();
+          }
+        }
+      });
+
+      // ==================== CANVAS POINTER INTERACTIONS ====================
+      dom.mainCanvas.addEventListener('pointerdown', (e) => {
+        const slide = getCurrentSlide();
+        if (!slide) return;
+        const pt = getCanvasCoords(e);
+
+        // ✋ 이동 모드 — 캐버스는 건드리지 않고 화면만 움직인다 (터치는 브라우저 기본 패닝)
+        if (state.canvasMode === 'pan') {
+          if (e.pointerType === 'mouse') {
+            dom.mainCanvas.setPointerCapture(e.pointerId);
+            state.interaction = {
+              type: 'pan',
+              startX: e.clientX,
+              startY: e.clientY,
+              scrollLeft: dom.stageContainer.scrollLeft,
+              scrollTop: dom.stageContainer.scrollTop,
+            };
+            dom.mainCanvas.style.cursor = 'grabbing';
+          }
+          return;
+        }
+        // Eyedropper mode
+        if (state.eyedropperTarget) {
+          const off = document.createElement('canvas');
+          off.width = slide.width;
+          off.height = slide.height;
+          const octx = off.getContext('2d');
+          octx.drawImage(slide.img, 0, 0, slide.width, slide.height);
+          const px = octx.getImageData(clamp(Math.floor(pt.x), 0, slide.width - 1), clamp(Math.floor(pt.y), 0, slide.height - 1), 1, 1).data;
+          const hex = rgbToHex(px[0], px[1], px[2]);
+          const box = getSelectedBox();
+          if (box) {
+            pushUndoState(slide);
+            if (state.eyedropperTarget === 'text') {
+              box.textColor = hex;
+            } else {
+              box.bgColor = hex;
+              box.bgMode = 'solid';
+            }
+          }
+          state.eyedropperTarget = null;
+          dom.mainCanvas.style.cursor = 'crosshair';
+          syncAllUI();
+          showToast(`색상 추출됨: ${hex.toUpperCase()}`, 'success');
+          return;
+        }
+
+        // 1. Check resize handles on currently selected box
+        const selected = getSelectedBox();
+        if (selected) {
+          const handle = hitTestHandle(selected, pt.x, pt.y);
+          if (handle) {
+            dom.mainCanvas.setPointerCapture(e.pointerId);
+            state.interaction = {
+              type: 'resize',
+              handle: handle.id,
+              startX: pt.x,
+              startY: pt.y,
+              origBox: { ...selected },
+              moved: false,
+            };
+            return;
+          }
+        }
+
+        // 2. Check clicking inside an existing box
+        const hitBox = hitTestBox(slide, pt.x, pt.y);
+        if (hitBox) {
+          state.selectedBoxId = hitBox.id;
+          state.isTextEditingSession = false;
+          dom.mainCanvas.setPointerCapture(e.pointerId);
+          state.interaction = {
+            type: 'move',
+            startX: pt.x,
+            startY: pt.y,
+            origBox: { ...hitBox },
+            moved: false,
+          };
+          syncAllUI();
+          return;
+        }
+
+        // 3. Start drawing a new selection box
+        state.selectedBoxId = null;
+        state.isTextEditingSession = false;
+        dom.mainCanvas.setPointerCapture(e.pointerId);
+        state.interaction = {
+          type: 'draw',
+          startX: pt.x,
+          startY: pt.y,
+          currX: pt.x,
+          currY: pt.y,
+        };
+        syncAllUI();
+      });
+
+      dom.mainCanvas.addEventListener('pointermove', (e) => {
+        const slide = getCurrentSlide();
+        if (!slide) return;
+        const pt = getCanvasCoords(e);
+
+        if (!state.interaction) {
+          if (state.canvasMode === 'pan') {
+            dom.mainCanvas.style.cursor = 'grab';
+            return;
+          }
+          if (state.eyedropperTarget) {
+            dom.mainCanvas.style.cursor = 'copy';
+            return;
+          }
+          const sel = getSelectedBox();
+          if (sel) {
+            const h = hitTestHandle(sel, pt.x, pt.y);
+            if (h) {
+              dom.mainCanvas.style.cursor = h.cursor;
+              return;
+            }
+          }
+          const over = hitTestBox(slide, pt.x, pt.y);
+          dom.mainCanvas.style.cursor = over ? 'move' : 'crosshair';
+          return;
+        }
+
+        const inter = state.interaction;
+        if (inter.type === 'pan') {
+          dom.stageContainer.scrollLeft = inter.scrollLeft - (e.clientX - inter.startX);
+          dom.stageContainer.scrollTop = inter.scrollTop - (e.clientY - inter.startY);
+          return;
+        }
+        if (inter.type === 'draw') {
+          inter.currX = clamp(pt.x, 0, slide.width);
+          inter.currY = clamp(pt.y, 0, slide.height);
+          renderCanvas();
+
+          // Draw live selection marquee
+          const rx = Math.min(inter.startX, inter.currX);
+          const ry = Math.min(inter.startY, inter.currY);
+          const rw = Math.abs(inter.currX - inter.startX);
+          const rh = Math.abs(inter.currY - inter.startY);
+          ctx.save();
+          ctx.fillStyle = 'rgba(99, 102, 241, 0.14)';
+          ctx.strokeStyle = '#6366f1';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 4]);
+          ctx.fillRect(rx, ry, rw, rh);
+          ctx.strokeRect(rx, ry, rw, rh);
+          ctx.restore();
+        } else if (inter.type === 'move') {
+          const box = getSelectedBox();
+          if (!box) return;
+          const dx = pt.x - inter.startX;
+          const dy = pt.y - inter.startY;
+          if (!inter.moved && (Math.abs(dx) > 2 || Math.abs(dy) > 2)) {
+            pushUndoState(slide);
+            inter.moved = true;
+          }
+          if (inter.moved) {
+            box.x = Math.round(clamp(inter.origBox.x + dx, 0, slide.width - box.w));
+            box.y = Math.round(clamp(inter.origBox.y + dy, 0, slide.height - box.h));
+            renderCanvas();
+          }
+        } else if (inter.type === 'resize') {
+          const box = getSelectedBox();
+          if (!box) return;
+          const dx = pt.x - inter.startX;
+          const dy = pt.y - inter.startY;
+          if (!inter.moved && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) {
+            pushUndoState(slide);
+            inter.moved = true;
+          }
+          if (inter.moved) {
+            const o = inter.origBox;
+            let nx = o.x, ny = o.y, nw = o.w, nh = o.h;
+            const minSize = 18;
+
+            if (inter.handle.includes('e')) nw = clamp(o.w + dx, minSize, slide.width - o.x);
+            if (inter.handle.includes('s')) nh = clamp(o.h + dy, minSize, slide.height - o.y);
+            if (inter.handle.includes('w')) {
+              const maxDx = o.w - minSize;
+              const clampedDx = clamp(dx, -o.x, maxDx);
+              nx = o.x + clampedDx;
+              nw = o.w - clampedDx;
+            }
+            if (inter.handle.includes('n')) {
+              const maxDy = o.h - minSize;
+              const clampedDy = clamp(dy, -o.y, maxDy);
+              ny = o.y + clampedDy;
+              nh = o.h - clampedDy;
+            }
+
+            box.x = Math.round(nx);
+            box.y = Math.round(ny);
+            box.w = Math.round(nw);
+            box.h = Math.round(nh);
+            renderCanvas();
+          }
+        }
+      });
+
+      dom.mainCanvas.addEventListener('pointerup', async (e) => {
+        const slide = getCurrentSlide();
+        const inter = state.interaction;
+        state.interaction = null;
+        if (!slide || !inter) return;
+
+        if (inter.type === 'pan') {
+          dom.mainCanvas.style.cursor = state.canvasMode === 'pan' ? 'grab' : 'crosshair';
+          return;
+        }
+
+        if (inter.type === 'draw') {
+          const x = Math.min(inter.startX, inter.currX);
+          const y = Math.min(inter.startY, inter.currY);
+          const w = Math.abs(inter.currX - inter.startX);
+          const h = Math.abs(inter.currY - inter.startY);
+
+          if (w < 16 || h < 12) {
+            renderCanvas();
+            return;
+          }
+
+          pushUndoState(slide);
+          const colors = analyzeRegionColors(slide, x, y, w, h);
+          const newBox = createDefaultBox(x, y, w, h, colors, '');
+          slide.boxes.push(newBox);
+          state.selectedBoxId = newBox.id;
+          syncAllUI();
+
+          // Open right inspector on mobile/tablet automatically
+          if (window.innerWidth < 1280) {
+            dom.rightSidebar.classList.remove('translate-x-full');
+          }
+
+          // Run AI Context Restoration immediately
+          await restoreBoxWithAI(newBox);
+        } else {
+          syncAllUI();
+        }
+      });
+
+      // Floating Quick Bar Actions
+      dom.fbAiFix.addEventListener('click', () => {
+        const box = getSelectedBox();
+        if (box) restoreBoxWithAI(box, box.text);
+      });
+      dom.fbAutoFit.addEventListener('click', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        pushUndoState();
+        autoFitBoxFontSize(box);
+        syncAllUI();
+      });
+      dom.fbDuplicate.addEventListener('click', duplicateSelectedBox);
+      dom.fbDelete.addEventListener('click', () => {
+        if (state.selectedBoxId) deleteBoxById(state.selectedBoxId);
+      });
+
+      // ==================== RIGHT INSPECTOR CONTROLS ====================
+      dom.propText.addEventListener('input', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        ensureTextEditUndoPoint();
+        box.text = dom.propText.value;
+        renderCanvas();
+        renderLayerList();
+        scheduleThumbnailUpdate();
+      });
+
+      dom.propText.addEventListener('blur', () => {
+        state.isTextEditingSession = false;
+      });
+
+      dom.btnRunAiRestore.addEventListener('click', () => {
+        const box = getSelectedBox();
+        if (box) restoreBoxWithAI(box, dom.propText.value);
+      });
+
+      dom.propFontFamily.addEventListener('change', async () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        pushUndoState();
+        box.fontFamily = dom.propFontFamily.value;
+        syncAllUI();
+        try {
+          await document.fonts.load(`700 24px "${box.fontFamily}"`);
+          renderCanvas();
+          scheduleThumbnailUpdate();
+        } catch (_) {}
+      });
+
+      dom.propFontSize.addEventListener('input', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        ensureTextEditUndoPoint();
+        box.fontSize = clamp(Number(dom.propFontSize.value) || 16, 8, 240);
+        renderCanvas();
+        scheduleThumbnailUpdate();
+      });
+      dom.propFontSize.addEventListener('blur', () => { state.isTextEditingSession = false; });
+
+      dom.btnAutoFitText.addEventListener('click', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        pushUndoState();
+        autoFitBoxFontSize(box);
+        syncAllUI();
+      });
+
+      dom.propFontWeight.addEventListener('change', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        pushUndoState();
+        box.fontWeight = dom.propFontWeight.value;
+        syncAllUI();
+      });
+
+      dom.propItalic.addEventListener('change', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        pushUndoState();
+        box.italic = dom.propItalic.checked;
+        syncAllUI();
+      });
+
+      dom.propShadow.addEventListener('change', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        pushUndoState();
+        box.shadow = dom.propShadow.checked;
+        syncAllUI();
+      });
+
+      document.querySelectorAll('.align-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const box = getSelectedBox();
+          if (!box) return;
+          pushUndoState();
+          box.align = btn.dataset.align;
+          syncAllUI();
+        });
+      });
+
+      document.querySelectorAll('.valign-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const box = getSelectedBox();
+          if (!box) return;
+          pushUndoState();
+          box.vAlign = btn.dataset.valign;
+          syncAllUI();
+        });
+      });
+
+      dom.propLineHeight.addEventListener('input', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        ensureTextEditUndoPoint();
+        box.lineHeight = Number(dom.propLineHeight.value);
+        dom.valLineHeight.textContent = box.lineHeight.toFixed(2);
+        renderCanvas();
+        scheduleThumbnailUpdate();
+      });
+      dom.propLineHeight.addEventListener('change', () => { state.isTextEditingSession = false; });
+
+      dom.propLetterSpacing.addEventListener('input', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        ensureTextEditUndoPoint();
+        box.letterSpacing = Number(dom.propLetterSpacing.value);
+        dom.valLetterSpacing.textContent = box.letterSpacing;
+        renderCanvas();
+        scheduleThumbnailUpdate();
+      });
+      dom.propLetterSpacing.addEventListener('change', () => { state.isTextEditingSession = false; });
+
+      dom.propTextColor.addEventListener('input', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        ensureTextEditUndoPoint();
+        box.textColor = dom.propTextColor.value;
+        dom.propTextColorHex.value = box.textColor.toUpperCase();
+        renderCanvas();
+        scheduleThumbnailUpdate();
+      });
+      dom.propTextColor.addEventListener('change', () => { state.isTextEditingSession = false; });
+
+      dom.propTextColorHex.addEventListener('change', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        const hex = normalizeHex(dom.propTextColorHex.value);
+        if (hex) {
+          pushUndoState();
+          box.textColor = hex;
+          syncAllUI();
+        } else {
+          dom.propTextColorHex.value = (box.textColor || '#1e293b').toUpperCase();
+        }
+      });
+
+      dom.btnEyedropText.addEventListener('click', () => {
+        state.eyedropperTarget = 'text';
+        dom.mainCanvas.style.cursor = 'copy';
+        showToast('슬라이드 위에서 추출할 글자 색상을 클릭하세요.');
+      });
+
+      dom.propBgMode.addEventListener('change', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        pushUndoState();
+        box.bgMode = dom.propBgMode.value;
+        syncAllUI();
+      });
+
+      dom.btnResampleBg.addEventListener('click', () => {
+        const slide = getCurrentSlide();
+        const box = getSelectedBox();
+        if (!slide || !box) return;
+        pushUndoState(slide);
+        const sampled = analyzeRegionColors(slide, box.x, box.y, box.w, box.h);
+        box.bgColor = sampled.bgColor;
+        box.gradientType = sampled.gradientType;
+        box.gradStart = sampled.gradStart;
+        box.gradEnd = sampled.gradEnd;
+        box.bgMode = 'auto';
+        syncAllUI();
+        showToast('주변 배경 색상을 다시 추출했습니다.', 'success');
+      });
+
+      dom.propBgColor.addEventListener('input', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        ensureTextEditUndoPoint();
+        box.bgColor = dom.propBgColor.value;
+        box.bgMode = 'solid';
+        dom.propBgMode.value = 'solid';
+        dom.propBgColorHex.value = box.bgColor.toUpperCase();
+        renderCanvas();
+        scheduleThumbnailUpdate();
+      });
+      dom.propBgColor.addEventListener('change', () => { state.isTextEditingSession = false; });
+
+      dom.propBgColorHex.addEventListener('change', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        const hex = normalizeHex(dom.propBgColorHex.value);
+        if (hex) {
+          pushUndoState();
+          box.bgColor = hex;
+          box.bgMode = 'solid';
+          syncAllUI();
+        } else {
+          dom.propBgColorHex.value = (box.bgColor || '#ffffff').toUpperCase();
+        }
+      });
+
+      dom.btnEyedropBg.addEventListener('click', () => {
+        state.eyedropperTarget = 'bg';
+        dom.mainCanvas.style.cursor = 'copy';
+        showToast('슬라이드 위에서 추출할 배경 색상을 클릭하세요.');
+      });
+
+      dom.propPadding.addEventListener('input', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        ensureTextEditUndoPoint();
+        box.padding = Number(dom.propPadding.value);
+        dom.valPadding.textContent = box.padding + 'px';
+        renderCanvas();
+        scheduleThumbnailUpdate();
+      });
+      dom.propPadding.addEventListener('change', () => { state.isTextEditingSession = false; });
+
+      dom.propRadius.addEventListener('input', () => {
+        const box = getSelectedBox();
+        if (!box) return;
+        ensureTextEditUndoPoint();
+        box.radius = Number(dom.propRadius.value);
+        dom.valRadius.textContent = box.radius + 'px';
+        renderCanvas();
+        scheduleThumbnailUpdate();
+      });
+      dom.propRadius.addEventListener('change', () => { state.isTextEditingSession = false; });
+
+      dom.btnDuplicateBox.addEventListener('click', duplicateSelectedBox);
+      dom.btnDeleteBox.addEventListener('click', () => {
+        if (state.selectedBoxId) deleteBoxById(state.selectedBoxId);
+      });
+
+      // ==================== KEYBOARD SHORTCUTS ====================
+      window.addEventListener('keydown', (e) => {
+        const tag = (e.target?.tagName || '').toLowerCase();
+        const isTyping = tag === 'input' || tag === 'textarea' || tag === 'select';
+
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+          if (!isTyping) {
+            e.preventDefault();
+            undo();
+          }
+          return;
+        }
+
+        if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z')) {
+          if (!isTyping) {
+            e.preventDefault();
+            redo();
+          }
+          return;
+        }
+
+        if (e.key === 'Escape' && !dom.keyModal.classList.contains('hidden')) {
+          closeKeyModal();
+          return;
+        }
+
+        if (e.key === 'Escape') {
+          if (state.eyedropperTarget) {
+            state.eyedropperTarget = null;
+            dom.mainCanvas.style.cursor = 'crosshair';
+          }
+          if (state.selectedBoxId !== null) {
+            state.selectedBoxId = null;
+            state.isTextEditingSession = false;
+            syncAllUI();
+          }
+          return;
+        }
+
+        if (isTyping) return;
+
+        if (e.code === 'Space') {
+          e.preventDefault();
+          startCompare();
+          return;
+        }
+
+        if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedBoxId) {
+          e.preventDefault();
+          deleteBoxById(state.selectedBoxId);
+          return;
+        }
+
+        // Arrow keys nudge selected box
+        const slide = getCurrentSlide();
+        const box = getSelectedBox();
+        if (slide && box && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+          e.preventDefault();
+          const step = e.shiftKey ? 10 : 1;
+          pushUndoState(slide);
+          if (e.key === 'ArrowLeft') box.x = clamp(box.x - step, 0, slide.width - box.w);
+          if (e.key === 'ArrowRight') box.x = clamp(box.x + step, 0, slide.width - box.w);
+          if (e.key === 'ArrowUp') box.y = clamp(box.y - step, 0, slide.height - box.h);
+          if (e.key === 'ArrowDown') box.y = clamp(box.y + step, 0, slide.height - box.h);
+          syncAllUI();
+        }
+      });
+
+      window.addEventListener('keyup', (e) => {
+        if (e.code === 'Space') {
+          endCompare();
+        }
+      });
+
+      // Responsive ResizeObserver for full-screen / split-screen transitions
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+          if (state.autoFitZoom && getCurrentSlide()) {
+            fitZoomToStage();
+          }
+        });
+        ro.observe(dom.stageContainer);
+      }
+    }
+
+    // ==================== INITIALIZATION ====================
+    document.addEventListener('DOMContentLoaded', async () => {
+      bindEvents();
+      updateAiKeyUI();
+      setCanvasMode('select');
+      /* 샘플 슬라이드는 웹폰트가 준비된 뒤에 그린다 — 폴백 폰트로 그리면 글자 모양이 달라져 OCR 품질도 떨어진다 */
+      try {
+        await Promise.all([
+          document.fonts.load('700 18px Pretendard'),
+          document.fonts.load('700 27px Pretendard'),
+          document.fonts.load('800 44px Pretendard'),
+          document.fonts.load('400 19px Pretendard'),
+          document.fonts.load('700 15px Pretendard'),
+        ]);
+        await document.fonts.ready;
+      } catch (_) {}
+      createBuiltInSampleSlide();
+    });
+  </script>
+</body>
+</html>
