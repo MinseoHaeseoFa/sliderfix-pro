@@ -1559,9 +1559,14 @@
       let blankRun = 0;
       for (let y = 0; y < reg.h; y++) {
         if (rowInk[y] >= minRowInk) {
-          if (!cur) cur = { top: y, bottom: y, ink: 0 };
+          if (!cur) cur = { top: y, bottom: y, ink: 0, x1: reg.w, x2: -1 };
           cur.bottom = y;
           cur.ink += rowInk[y];
+          for (let x = 0; x < reg.w; x++) {
+            if (!mask[y * reg.w + x]) continue;
+            if (x < cur.x1) cur.x1 = x;
+            if (x > cur.x2) cur.x2 = x;
+          }
           blankRun = 0;
         } else if (cur && rowInk[y] < minRowInk * 0.5) {
           if (++blankRun >= 2) {
@@ -1689,8 +1694,14 @@
       }
 
       const lineCount = Math.max(1, bands.length);
-      const heights = bands.map(b => b.bottom - b.top + 1).sort((a, b) => a - b);
-      const inkLineH = heights[Math.floor(heights.length / 2)];
+      /* 대표 줄 높이 = '가로로 충분히 긴 줄'(=글자 줄)들의 잉크 높이 중앙값.
+         아이콘 조각·짧은 표시(폭이 좁음)는 빼고 보므로, 박스 안에 다른 요소가 섞여도
+         글자 크기가 엉뚱하게 작아지지 않는다. (밑줄·테두리 같은 얇고 긴 줄은
+         중앙값에서 눌러 준다) */
+      const wideBands = bands.filter(b => (b.x2 - b.x1 + 1) >= boxW * 0.35);
+      const pool = (wideBands.length >= 2 ? wideBands : bands)
+        .map(b => b.bottom - b.top + 1).sort((a, b) => a - b);
+      const inkLineH = pool.length ? pool[Math.floor(pool.length / 2)] : 0;
       let pitch = 0;
       if (bands.length > 1) {
         const gaps = [];
@@ -1767,7 +1778,10 @@
       /* 2순위: 줄 수가 조금 늘어도 박스에 들어가는 크기 (하한까지만) */
       for (let s = startSize; s >= floorSize && !solved; s--) {
         const lines = wrapAt(s).length;
-        if (lines * s * lh <= availH + 0.5) { size = s; usedLh = lh; solved = true; break; }
+        const needH2 = lines * s * lh;
+        if (needH2 <= availH + 0.5) { size = s; usedLh = lh; solved = true; break; }
+        const squeeze2 = availH / Math.max(1, lines * s);
+        if (squeeze2 >= 1.05) { size = s; usedLh = Math.min(lh, squeeze2); solved = true; break; }
       }
       if (!solved) {
         size = floorSize;
