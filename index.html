@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SlideFix Pro — 노트북LM 슬라이드·인포그래픽 글자 수정 에디터</title>
+  <title>SlideFix Pro — 이미지, PDF 파일 한글 수정 에디터</title>
 
-  <meta name="description" content="노트북LM 슬라이드·인포그래픽에서 깨진 한글(□, ?) 영역을 드래그해 AI로 복원하는 무설치 웹 에디터. PDF·이미지 불러오기, 오프라인 OCR, 고화질 내보내기까지." />
+  <meta name="description" content="이미지·PDF 파일 속 깨진 한글(□, ?)과 오타를 드래그 한 번으로 AI가 복원하는 무설치 웹 에디터. PNG·JPG·WebP·다중 페이지 PDF 지원, 오프라인 OCR, 고화질 내보내기까지." />
   <meta name="author" content="SlideFix Pro" />
   <meta name="theme-color" content="#0d1017" />
 
@@ -18,15 +18,15 @@
   <meta property="og:url" content="https://sliderfix-pro.vercel.app/" />
   <meta property="og:site_name" content="SlideFix Pro" />
   <meta property="og:locale" content="ko_KR" />
-  <meta property="og:title" content="SlideFix Pro — 노트북LM 슬라이드·인포그래픽 글자 수정 에디터" />
-  <meta property="og:description" content="노트북LM 슬라이드·인포그래픽에서 깨진 한글(□, ?) 영역을 드래그해 AI로 복원하는 무설치 웹 에디터. PDF·이미지 불러오기, 오프라인 OCR, 고화질 내보내기까지." />
+  <meta property="og:title" content="SlideFix Pro — 이미지, PDF 파일 한글 수정 에디터" />
+  <meta property="og:description" content="이미지·PDF 파일 속 깨진 한글(□, ?)과 오타를 드래그 한 번으로 AI가 복원하는 무설치 웹 에디터. PNG·JPG·WebP·다중 페이지 PDF 지원, 오프라인 OCR, 고화질 내보내기까지." />
   <meta property="og:image" content="https://sliderfix-pro.vercel.app/og-image.png" />
   <meta property="og:image:width" content="2400" />
   <meta property="og:image:height" content="1260" />
-  <meta property="og:image:alt" content="SlideFix Pro — 깨진 한글 복원 에디터" />
+  <meta property="og:image:alt" content="SlideFix Pro — 이미지, PDF 파일 한글 수정 에디터" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="SlideFix Pro — 노트북LM 슬라이드·인포그래픽 글자 수정 에디터" />
-  <meta name="twitter:description" content="노트북LM 슬라이드·인포그래픽에서 깨진 한글(□, ?) 영역을 드래그해 AI로 복원하는 무설치 웹 에디터. PDF·이미지 불러오기, 오프라인 OCR, 고화질 내보내기까지." />
+  <meta name="twitter:title" content="SlideFix Pro — 이미지, PDF 파일 한글 수정 에디터" />
+  <meta name="twitter:description" content="이미지·PDF 파일 속 깨진 한글(□, ?)과 오타를 드래그 한 번으로 AI가 복원하는 무설치 웹 에디터. PNG·JPG·WebP·다중 페이지 PDF 지원, 오프라인 OCR, 고화질 내보내기까지." />
   <meta name="twitter:image" content="https://sliderfix-pro.vercel.app/og-image.png" />
 
   <!-- Tailwind CSS CDN -->
@@ -200,7 +200,7 @@
               <span class="font-bold text-sm tracking-tight">SlideFix Pro</span>
               <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-indigo-500/15 text-indigo-500 dark:text-indigo-400">AI</span>
             </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-none">노트북LM 깨진 한글 복원 에디터</p>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-none">이미지, PDF 파일 한글 수정 에디터</p>
           </div>
         </div>
 
@@ -344,9 +344,9 @@
               <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-indigo-500/15 text-indigo-500 flex items-center justify-center">
                 <svg class="w-7 h-7" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
               </div>
-              <h2 class="text-base font-bold mb-1.5">노트북LM 슬라이드 또는 PDF 불러오기</h2>
+              <h2 class="text-base font-bold mb-1.5">이미지 또는 PDF 파일 불러오기</h2>
               <p class="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
-                깨진 한글(□, ?)이 포함된 PNG, JPG, WebP 이미지나<br/>다중 페이지 PDF 파일을 드래그하거나 선택하세요.
+                깨진 한글·오타가 있는 PNG, JPG, WebP 이미지나<br/>다중 페이지 PDF 파일을 드래그하거나 선택하세요.
               </p>
               <div class="flex flex-col sm:flex-row items-center justify-center gap-2.5">
                 <label for="fileInput" class="cursor-pointer w-full sm:w-auto px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
@@ -1594,10 +1594,10 @@
         const cropB64 = getCroppedRegionBase64(slide, box);
         const fullB64 = getFullSlideBase64(slide);
 
-        const prompt = `당신은 NotebookLM 슬라이드/인포그래픽의 깨진 한글(□, ?, 깨진 자모, 외계어 등)을 완벽한 자연어 한국어로 복원하는 전문가입니다.
-첫 번째 이미지는 사용자가 선택한 특정 텍스트 영역(2배 확대본)이고, 두 번째 이미지는 슬라이드 전체 화면입니다.
+        const prompt = `당신은 이미지나 PDF 문서(슬라이드·인포그래픽 포함)의 깨진 한글(□, ?, 깨진 자모, 외계어 등)과 오타를 완벽한 자연어 한국어로 복원하는 전문가입니다.
+첫 번째 이미지는 사용자가 선택한 특정 텍스트 영역(2배 확대본)이고, 두 번째 이미지는 문서 전체 화면입니다.
 ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manualHintText}"` : ''}
-슬라이드 전체 주제와 앞뒤 문맥을 분석하여:
+문서 전체 주제와 앞뒤 문맥을 분석하여:
 1. detectedBrokenText: 선택 영역에 보이는 원래의 깨진 텍스트를 그대로 적으세요.
 2. restoredText: 깨진 글자를 문맥에 가장 자연스럽게 복원한 최종 한국어 문장/단어.
 3. correctionNote: 어떤 깨진 부분이 어떻게 복원되었는지 짧은 요약 (예: "자□화 → 자동화, 트?드 → 트렌드").
@@ -1850,7 +1850,7 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
       // Header Badge
       sctx.fillStyle = '#4f46e5';
       sctx.font = '700 18px Pretendard, sans-serif';
-      sctx.fillText('NOTEBOOKLM SUMMARY · 2026 STRATEGY', 64, 96);
+      sctx.fillText('IMAGE & PDF EDITOR · 2026 STRATEGY', 64, 96);
 
       // Broken Title (Intentional garbled glyphs)
       sctx.fillStyle = '#0f172a';
@@ -1904,7 +1904,7 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
       const img = await loadImageElement(dataUrl);
       const slide = {
         id: uid(),
-        name: '샘플_노트북LM_슬라이드.png',
+        name: '샘플_슬라이드.png',
         width: w,
         height: h,
         img,
