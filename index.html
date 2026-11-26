@@ -111,9 +111,62 @@
       flex: 1 1 0%;
       min-height: 0;
       overflow: auto;
+      overscroll-behavior: contain;
       position: relative;
       z-index: 10;
     }
+
+    /* 확대해서 캔버스가 화면보다 커져도 좌·상단 끝까지 스크롤되게 한다.
+       flex의 justify-center/items-center 중앙정렬은 자식이 넘칠 때
+       왼쪽·위쪽 오버플로를 스크롤 불가 영역으로 잘라내므로,
+       자식(#canvasWrapper)의 margin:auto로 중앙정렬한다. */
+    #canvasOuterFlex {
+      display: flex;
+      width: max-content;
+      min-width: 100%;
+      height: max-content;
+      min-height: 100%;
+    }
+    /* 어떤 슬라이드도 없을 때는 숨김 (ID의 display:flex가 .hidden을 이기지 않도록) */
+    #canvasOuterFlex.hidden { display: none; }
+    #canvasWrapper {
+      margin: auto;
+    }
+
+    /* AI 사용 ON/OFF 스위치 */
+    .ai-switch {
+      position: relative;
+      width: 46px;
+      height: 26px;
+      border-radius: 9999px;
+      background: #cbd5e1;
+      transition: background 0.18s ease;
+      flex-shrink: 0;
+    }
+    .ai-switch::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 9999px;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35);
+      transition: transform 0.18s ease;
+    }
+    /* 손가락 터치 영역을 살짝 넓힌다 */
+    .ai-switch::before {
+      content: '';
+      position: absolute;
+      inset: -10px;
+      border-radius: 9999px;
+    }
+    .ai-switch.is-on { background: #6366f1; }
+    .ai-switch.is-on::after { transform: translateX(20px); }
+    .ai-switch:disabled { opacity: 0.45; cursor: not-allowed; }
+    .dark .ai-switch { background: #475569; }
+    .dark .ai-switch.is-on { background: #6366f1; }
 
     #bottomControlBar {
       position: relative;
@@ -243,7 +296,7 @@
       <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
         <button id="btnOpenKeyModal" type="button" class="inline-flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-studio-border bg-white dark:bg-studio-card hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium transition shrink-0" title="Gemini API 키 등록 (선택) · 없으면 오프라인 OCR로 동작합니다" aria-haspopup="dialog">
           <span aria-hidden="true">🔑</span>
-          <span class="hidden md:inline">AI 키</span>
+          <span id="aiKeyLabel" class="hidden md:inline">AI 키</span>
           <span id="aiKeyDot" class="w-1.5 h-1.5 rounded-full bg-slate-400" aria-hidden="true"></span>
         </button>
 
@@ -360,12 +413,12 @@
           </div>
 
           <!-- Canvas Centering Wrapper -->
-          <div id="canvasOuterFlex" class="min-w-full min-h-full flex items-center justify-center">
+          <div id="canvasOuterFlex" class="min-w-full min-h-full flex">
             <div id="canvasWrapper" class="relative shadow-2xl rounded-sm overflow-visible bg-white">
               <canvas id="mainCanvas"></canvas>
 
               <!-- Floating Quick Action Bar for Selected Box -->
-              <div id="floatingQuickBar" class="hidden absolute -top-11 left-1/2 -translate-x-1/2 z-30 bg-slate-900/95 text-white px-2 py-1 rounded-xl shadow-lg border border-slate-700 flex items-center gap-1 whitespace-nowrap">
+              <div id="floatingQuickBar" class="hidden absolute z-30 bg-slate-900/95 text-white px-2 py-1 rounded-xl shadow-lg border border-slate-700 flex items-center gap-1 whitespace-nowrap">
                 <button id="fbAiFix" type="button" class="px-2 py-1 rounded-lg hover:bg-indigo-600 text-[11px] font-semibold flex items-center gap-1 transition" title="선택 영역 AI 문맥 복원">
                   <span>AI 복원</span>
                 </button>
@@ -419,9 +472,9 @@
               맞춤
             </button>
 
-            <button id="btnToggleGuides" type="button" class="h-9 px-3 rounded-xl border border-slate-200 dark:border-studio-border bg-white dark:bg-studio-card hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold inline-flex items-center gap-1.5 transition" title="모든 수정 영역 가이드선 표시/숨김">
+            <button id="btnToggleGuides" type="button" aria-pressed="false" class="h-9 px-3 rounded-xl border border-slate-200 dark:border-studio-border bg-white dark:bg-studio-card hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold inline-flex items-center gap-1.5 transition" title="모든 수정 영역의 위치를 점선으로 표시합니다 (화면에서만 보이고 저장·내보내기에는 포함되지 않아요)">
               <span id="guideStatusDot" class="w-2 h-2 rounded-full bg-slate-400"></span>
-              <span id="guideStatusText">가이드선 OFF</span>
+              <span id="guideStatusText">영역 가이드 OFF</span>
             </button>
           </div>
         </footer>
@@ -445,12 +498,13 @@
             슬라이드 위에서 깨진 글자 영역을 마우스로 드래그하면<br/>AI가 문맥을 분석해 자동으로 한글을 복원합니다.
           </p>
           <div class="w-full rounded-xl bg-slate-50 dark:bg-studio-card/70 border border-slate-200 dark:border-studio-border p-3 text-left text-[11px] text-slate-500 dark:text-slate-400 space-y-1.5">
-            <div class="font-semibold text-slate-700 dark:text-slate-200">단축키 안내</div>
+            <div class="font-semibold text-slate-700 dark:text-slate-200">단축키·화면 안내</div>
             <div>• <span class="font-medium">드래그</span> : 새 수정 영역 추가 및 AI 복원</div>
             <div>• <span class="font-medium">빈 곳 클릭 / Esc</span> : 선택 해제 (점선 숨김)</div>
-            <div>• <span class="font-medium">Delete</span> : 선택한 영역만 개별 삭제</div>
+            <div>• <span class="font-medium">삭제</span> : 선택한 영역만 개별 삭제</div>
             <div>• <span class="font-medium">Space (길게)</span> : 원본 슬라이드 비교</div>
             <div>• <span class="font-medium">Ctrl + Z / Y</span> : 실행 취소 / 다시 실행</div>
+            <div>• <span class="font-medium">하단 [영역 가이드]</span> : 모든 수정 영역 위치를 점선으로 보기</div>
           </div>
         </div>
 
@@ -458,11 +512,14 @@
         <div id="inspectorForm" class="hidden p-4 space-y-4">
           <!-- Section 1: Text & AI Context Restoration -->
           <div class="space-y-2">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-1">
               <label for="propText" class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">복원 텍스트</label>
-              <button id="btnRunAiRestore" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold shadow-sm transition">
-                <span>AI 문맥 복원</span>
-              </button>
+              <div class="flex items-center gap-1">
+                <button id="btnFinishEditTop" type="button" class="inline-flex items-center gap-0.5 px-2 py-1 rounded-lg border border-slate-200 dark:border-studio-border bg-white dark:bg-studio-card hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-semibold transition" title="편집을 마치고 선택 점선을 숨깁니다">✓ 완료</button>
+                <button id="btnRunAiRestore" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold shadow-sm transition">
+                  <span>AI 문맥 복원</span>
+                </button>
+              </div>
             </div>
 
             <textarea id="propText" rows="3" placeholder="교체할 한국어 텍스트를 입력하세요..." class="w-full rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"></textarea>
@@ -647,13 +704,18 @@
           <hr class="border-slate-200 dark:border-studio-border" />
 
           <!-- Section 4: Layer Actions -->
-          <div class="flex items-center gap-2 pt-1 pb-4">
-            <button id="btnDuplicateBox" type="button" class="flex-1 py-2 px-3 rounded-xl border border-slate-200 dark:border-studio-border bg-slate-50 hover:bg-slate-100 dark:bg-studio-card dark:hover:bg-slate-800 text-xs font-semibold transition">
-              영역 복제
+          <div class="space-y-2 pt-1 pb-4">
+            <button id="btnFinishEdit" type="button" class="w-full py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition inline-flex items-center justify-center gap-1.5">
+              <span>✓</span><span>편집 완료 (선택 해제)</span>
             </button>
-            <button id="btnDeleteBox" type="button" class="flex-1 py-2 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 text-xs font-semibold transition">
-              선택 영역 삭제
-            </button>
+            <div class="flex items-center gap-2">
+              <button id="btnDuplicateBox" type="button" class="flex-1 py-2 px-3 rounded-xl border border-slate-200 dark:border-studio-border bg-slate-50 hover:bg-slate-100 dark:bg-studio-card dark:hover:bg-slate-800 text-xs font-semibold transition">
+                영역 복제
+              </button>
+              <button id="btnDeleteBox" type="button" class="flex-1 py-2 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 text-rose-600 dark:text-rose-400 text-xs font-semibold transition">
+                선택 영역 삭제
+              </button>
+            </div>
           </div>
         </div>
       </aside>
@@ -667,7 +729,7 @@
         <div>
           <h3 id="keyModalTitle" class="text-base font-bold">🔑 Gemini API 키 등록</h3>
           <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
-            키가 없어도 드래그한 영역을 <b>오프라인 OCR(한국어·영어)</b>로 인식합니다. 키를 넣으면 문맥에 맞는 자동 복원과 <b>전체 자동 탐지</b>를 쓸 수 있어요.
+            키가 없어도 드래그한 영역을 <b>오프라인 OCR(한국어·영어)</b>로 인식합니다. 키를 넣으면 문맥에 맞는 자동 복원과 <b>전체 자동 탐지</b>를 쓸 수 있어요. 아래 스위치로 AI 사용만 잠시 끄고 오프라인 OCR로 돌아갈 수 있습니다(키는 보관).
           </p>
         </div>
         <button id="btnCloseKeyModal" type="button" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-studio-card text-slate-400" aria-label="닫기" title="닫기">
@@ -681,6 +743,17 @@
         <p id="keyStatus" class="text-[11px] text-slate-500 dark:text-slate-400"></p>
       </div>
 
+      <!-- AI 사용 ON/OFF -->
+      <div class="flex items-center justify-between gap-3 rounded-xl bg-slate-50 dark:bg-studio-card border border-slate-200 dark:border-studio-border px-3 py-2.5">
+        <div class="min-w-0">
+          <div class="text-xs font-bold">AI 문맥 복원 사용</div>
+          <div id="aiToggleHint" class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">켜면 Gemini가 문맥을 읽어 복원합니다. 끄면 키는 그대로 보관하고 오프라인 OCR로 동작합니다.</div>
+        </div>
+        <button id="btnToggleAiUse" type="button" role="switch" aria-checked="false" class="ai-switch" title="AI 사용 켜기/끄기" aria-label="AI 문맥 복원 사용">
+          <span class="sr-only">AI 문맥 복원 사용</span>
+        </button>
+      </div>
+
       <p class="text-[10px] text-slate-400 leading-relaxed">
         키는 이 브라우저의 <code>localStorage</code>(<code>slidefix_gemini_key</code>)에만 저장되고, 복원을 요청할 때만 Google Gemini API로 전송됩니다. 공용 PC에서는 등록하지 마세요.
         발급: <a class="text-indigo-600 dark:text-indigo-400 underline" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>
@@ -692,6 +765,13 @@
         <button id="btnSaveKey" type="button" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">저장</button>
       </div>
     </div>
+  </div>
+
+  <!-- Eyedropper Mode Banner -->
+  <div id="eyedropperBanner" class="hidden fixed left-1/2 -translate-x-1/2 top-16 z-[60] max-w-[calc(100vw-1.5rem)] bg-indigo-600 text-white pl-3 pr-1.5 py-1.5 rounded-xl shadow-xl flex items-center gap-2 text-[11px] sm:text-xs font-semibold">
+    <span aria-hidden="true">💧</span>
+    <span id="eyedropperBannerText">스포이드: 색을 추출할 지점을 누르세요</span>
+    <button id="btnCancelEyedropper" type="button" class="ml-1 px-2 py-1 rounded-lg bg-white/20 hover:bg-white/30 text-white text-[11px] font-semibold transition shrink-0 whitespace-nowrap" title="스포이드 취소 (Esc)">취소</button>
   </div>
 
   <!-- Loading Overlay -->
@@ -736,6 +816,7 @@
       showGuides: false, // Default OFF: completed boxes have NO dashed border unless selected or explicitly toggled ON
       isComparingOriginal: false,
       eyedropperTarget: null, // null | 'text' | 'bg'
+      eyedropperReopenInspector: false,
       interaction: null, // { type: 'draw'|'move'|'resize', handle, startX, startY, origBox, moved }
       isTextEditingSession: false,
       thumbTimer: null,
@@ -771,9 +852,12 @@
       // Gemini API Key
       btnOpenKeyModal: document.getElementById('btnOpenKeyModal'),
       aiKeyDot: document.getElementById('aiKeyDot'),
+      aiKeyLabel: document.getElementById('aiKeyLabel'),
       keyModal: document.getElementById('keyModal'),
       keyInput: document.getElementById('keyInput'),
       keyStatus: document.getElementById('keyStatus'),
+      btnToggleAiUse: document.getElementById('btnToggleAiUse'),
+      aiToggleHint: document.getElementById('aiToggleHint'),
       btnSaveKey: document.getElementById('btnSaveKey'),
       btnDeleteKey: document.getElementById('btnDeleteKey'),
       btnCancelKey: document.getElementById('btnCancelKey'),
@@ -818,6 +902,7 @@
       inspectorForm: document.getElementById('inspectorForm'),
       propText: document.getElementById('propText'),
       btnRunAiRestore: document.getElementById('btnRunAiRestore'),
+      btnFinishEditTop: document.getElementById('btnFinishEditTop'),
       aiSuggestionBox: document.getElementById('aiSuggestionBox'),
       aiDiffBadge: document.getElementById('aiDiffBadge'),
       aiCandidatesList: document.getElementById('aiCandidatesList'),
@@ -846,6 +931,11 @@
       valRadius: document.getElementById('valRadius'),
       btnDuplicateBox: document.getElementById('btnDuplicateBox'),
       btnDeleteBox: document.getElementById('btnDeleteBox'),
+      btnFinishEdit: document.getElementById('btnFinishEdit'),
+
+      eyedropperBanner: document.getElementById('eyedropperBanner'),
+      eyedropperBannerText: document.getElementById('eyedropperBannerText'),
+      btnCancelEyedropper: document.getElementById('btnCancelEyedropper'),
 
       loadingOverlay: document.getElementById('loadingOverlay'),
       loadingTitle: document.getElementById('loadingTitle'),
@@ -894,7 +984,7 @@
         warn: 'bg-amber-600/95 text-white border-amber-500',
         error: 'bg-rose-600/95 text-white border-rose-500',
       };
-      el.className = `px-4 py-2 rounded-xl border shadow-lg text-xs font-semibold transition-all duration-200 ${colors[type] || colors.info}`;
+      el.className = `px-4 py-2 rounded-xl border shadow-lg text-xs font-semibold text-center max-w-[92vw] transition-all duration-200 ${colors[type] || colors.info}`;
       el.textContent = msg;
       dom.toastContainer.appendChild(el);
       setTimeout(() => {
@@ -941,11 +1031,26 @@
 
     // ==================== GEMINI API KEY (localStorage) ====================
     const AI_KEY_STORAGE = 'slidefix_gemini_key';
+    const AI_ENABLED_STORAGE = 'slidefix_ai_enabled'; // '1' | '0' — 키를 지우지 않고 AI 사용만 끄기
     /* 2026-11 기준 널리 쓰이는 모델을 먼저 시도하고, 없으면 프리뷰 모델로 넘어간다 */
     const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-3-flash-preview'];
 
     function getApiKey() {
       try { return String(localStorage.getItem(AI_KEY_STORAGE) || '').trim(); } catch (_) { return ''; }
+    }
+
+    function isAiUseOn() {
+      try { return localStorage.getItem(AI_ENABLED_STORAGE) !== '0'; } catch (_) { return true; }
+    }
+
+    /* 실제로 AI를 호출할 수 있는 상태 = 키가 있고 + 사용 스위치가 켜져 있음 */
+    function isAiEnabled() {
+      return Boolean(getApiKey()) && isAiUseOn();
+    }
+
+    function setAiUse(on) {
+      try { localStorage.setItem(AI_ENABLED_STORAGE, on ? '1' : '0'); } catch (_) {}
+      updateAiKeyUI();
     }
 
     function maskKey(key) {
@@ -956,18 +1061,52 @@
 
     function updateAiKeyUI() {
       const key = getApiKey();
+      const useOn = isAiUseOn();
+      const active = Boolean(key) && useOn;
+
       if (dom.aiKeyDot) {
-        dom.aiKeyDot.className = 'w-1.5 h-1.5 rounded-full ' + (key ? 'bg-emerald-500' : 'bg-slate-400');
+        dom.aiKeyDot.className = 'w-1.5 h-1.5 rounded-full ' + (!key ? 'bg-slate-400' : (useOn ? 'bg-emerald-500' : 'bg-amber-400'));
+      }
+      if (dom.aiKeyLabel) {
+        dom.aiKeyLabel.textContent = !key ? 'AI 키' : (useOn ? 'AI 사용' : 'AI 꺼짐');
       }
       if (dom.btnOpenKeyModal) {
-        dom.btnOpenKeyModal.title = key
-          ? `Gemini API 키 등록됨 (${maskKey(key)}) · 눌러서 변경하거나 삭제`
-          : 'Gemini API 키 등록 (선택) · 없으면 오프라인 OCR로 동작합니다';
+        const keyBtnBase = 'inline-flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-lg border text-xs font-medium transition shrink-0';
+        const keyBtnTone = !key
+          ? 'border-slate-200 dark:border-studio-border bg-white dark:bg-studio-card hover:bg-slate-50 dark:hover:bg-slate-800'
+          : (useOn
+            ? 'border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20'
+            : 'border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20');
+        dom.btnOpenKeyModal.className = keyBtnBase + ' ' + keyBtnTone;
+        dom.btnOpenKeyModal.title = !key
+          ? 'AI 키 등록 (선택) · 지금은 오프라인 OCR 모드로 동작합니다'
+          : (useOn
+            ? `AI 사용 중 (${maskKey(key)}) · Gemini 문맥 복원 · 눌러서 키 변경/끄기`
+            : `AI 사용 꺼짐 (키 ${maskKey(key)}는 보관 중) · 오프라인 OCR 모드 · 눌러서 켜기`);
+        dom.btnOpenKeyModal.setAttribute('aria-label', dom.btnOpenKeyModal.title);
       }
       if (dom.keyStatus) {
-        dom.keyStatus.textContent = key
-          ? `현재 등록된 키: ${maskKey(key)}`
-          : '등록된 키가 없습니다. 지금은 오프라인 OCR 모드로 동작합니다.';
+        dom.keyStatus.textContent = !key
+          ? '등록된 키가 없습니다. 지금은 오프라인 OCR 모드로 동작합니다.'
+          : (useOn
+            ? `현재 등록된 키: ${maskKey(key)} · AI 사용 중`
+            : `키 ${maskKey(key)}는 저장되어 있지만 AI 사용이 꺼져 있어 오프라인 OCR로 동작합니다.`);
+      }
+      if (dom.btnToggleAiUse) {
+        const disabled = !key;
+        dom.btnToggleAiUse.disabled = disabled;
+        dom.btnToggleAiUse.classList.toggle('is-on', active);
+        dom.btnToggleAiUse.setAttribute('aria-checked', active ? 'true' : 'false');
+        dom.btnToggleAiUse.title = disabled
+          ? '먼저 API 키를 저장하면 AI 사용을 켤 수 있습니다'
+          : (active ? 'AI 사용을 끄면 키는 보관한 채 오프라인 OCR로 전환합니다' : 'AI 사용을 켜면 Gemini 문맥 복원을 씁니다');
+      }
+      if (dom.aiToggleHint) {
+        dom.aiToggleHint.textContent = !key
+          ? 'API 키를 저장하면 이 스위치를 켤 수 있습니다. 키가 없으면 오프라인 OCR로 동작합니다.'
+          : (useOn
+            ? '지금은 AI(제미나이) 문맥 복원을 사용합니다. 끄면 키를 지우지 않고 오프라인 OCR로 전환합니다.'
+            : '지금은 오프라인 OCR 모드입니다. 키는 그대로 보관되어 있어 언제든 다시 켤 수 있습니다.');
       }
     }
 
@@ -986,6 +1125,23 @@
       const slide = getCurrentSlide();
       if (!slide || !state.selectedBoxId) return null;
       return slide.boxes.find(b => b.id === state.selectedBoxId) || null;
+    }
+
+    /* 작업을 마친 뒤 캔버스에 선택 점선·핸들이 남지 않도록 선택을 해제한다 */
+    function clearSelection(options = {}) {
+      const hadSelection = state.selectedBoxId !== null;
+      if (state.eyedropperTarget) cancelEyedropper({ reopen: false });
+      state.selectedBoxId = null;
+      state.isTextEditingSession = false;
+      if (options.closeMobileInspector !== false && window.innerWidth < 1280) {
+        dom.rightSidebar.classList.add('translate-x-full');
+      }
+      if (hadSelection || options.force) syncAllUI();
+    }
+
+    /* AI/OCR 복원 등 한 번의 수정 작업이 끝난 시점 — 결과를 점선 없이 바로 보여준다 */
+    function finishBoxWork() {
+      clearSelection({ closeMobileInspector: true });
     }
 
     // ==================== UNDO / REDO HISTORY ====================
@@ -1038,7 +1194,7 @@
       const off = document.createElement('canvas');
       off.width = slide.width;
       off.height = slide.height;
-      const octx = off.getContext('2d');
+      const octx = off.getContext('2d', { willReadFrequently: true });
       octx.drawImage(slide.img, 0, 0, slide.width, slide.height);
 
       const sx = clamp(Math.floor(x), 0, slide.width - 1);
@@ -1369,28 +1525,52 @@
     function updateFloatingQuickBar() {
       const slide = getCurrentSlide();
       const box = getSelectedBox();
-      if (!slide || !box || state.isComparingOriginal) {
+      if (!slide || !box || state.isComparingOriginal || state.eyedropperTarget) {
         dom.floatingQuickBar.classList.add('hidden');
         return;
       }
       dom.floatingQuickBar.classList.remove('hidden');
-      const centerX = (box.x + box.w / 2) * state.zoom;
-      const topY = box.y * state.zoom;
-      dom.floatingQuickBar.style.left = clamp(centerX, 110, Math.max(110, slide.width * state.zoom - 110)) + 'px';
+
+      const zoom = state.zoom;
+      const centerX = (box.x + box.w / 2) * zoom;
+      const topY = box.y * zoom;
+      const barW = dom.floatingQuickBar.offsetWidth || 240;
+      const slideW = slide.width * zoom;
+
+      /* 가운데 정렬은 left 값을 직접 계산한다 (-translate-x-1/2와 inline left가
+         겹치면 바가 왼쪽으로 밀려 캔버스 탭을 가로챘다) */
+      dom.floatingQuickBar.style.left = clamp(centerX - barW / 2, 6, Math.max(6, slideW - barW - 6)) + 'px';
       if (topY < 46) {
-        dom.floatingQuickBar.style.top = (box.y + box.h) * state.zoom + 8 + 'px';
+        dom.floatingQuickBar.style.top = (box.y + box.h) * zoom + 8 + 'px';
       } else {
-        dom.floatingQuickBar.style.top = topY - 40 + 'px';
+        dom.floatingQuickBar.style.top = topY - 44 + 'px';
       }
     }
 
     // ==================== ZOOM & GUIDES CONTROLS ====================
-    function setZoom(newZoom, manual = true) {
+    function setZoom(newZoom, manual = true, anchorClient = null) {
       const slide = getCurrentSlide();
       if (!slide) return;
       if (manual) state.autoFitZoom = false;
-      state.zoom = clamp(newZoom, 0.15, 3.0);
+      const next = clamp(newZoom, 0.15, 3.0);
+      if (Math.abs(next - state.zoom) < 0.0005) return;
+
+      /* 확대·축소 전에 보고 있던 지점(기본: 화면 중앙, 휠: 마우스 위치)을 기억한다 */
+      const stage = dom.stageContainer;
+      const stageRect = stage.getBoundingClientRect();
+      const anchor = anchorClient || { x: stageRect.left + stageRect.width / 2, y: stageRect.top + stageRect.height / 2 };
+      const canvasRect = dom.mainCanvas.getBoundingClientRect();
+      const anchorPoint = {
+        x: (anchor.x - canvasRect.left) / state.zoom,
+        y: (anchor.y - canvasRect.top) / state.zoom,
+      };
+
+      state.zoom = next;
       renderCanvas();
+
+      const canvasRect2 = dom.mainCanvas.getBoundingClientRect();
+      stage.scrollLeft += (canvasRect2.left + anchorPoint.x * state.zoom) - anchor.x;
+      stage.scrollTop += (canvasRect2.top + anchorPoint.y * state.zoom) - anchor.y;
     }
 
     function fitZoomToStage() {
@@ -1411,13 +1591,16 @@
         dom.btnToggleGuides.classList.add('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'dark:bg-indigo-500/20', 'dark:text-indigo-300', 'dark:border-indigo-500/50');
         dom.guideStatusDot.classList.remove('bg-slate-400');
         dom.guideStatusDot.classList.add('bg-indigo-500');
-        dom.guideStatusText.textContent = '가이드선 ON';
+        dom.guideStatusText.textContent = '영역 가이드 ON';
+        showToast('모든 수정 영역의 위치를 점선으로 표시합니다. 화면 전용이라 저장·내보내기에는 들어가지 않아요.', 'info');
       } else {
         dom.btnToggleGuides.classList.remove('border-indigo-500', 'bg-indigo-50', 'text-indigo-700', 'dark:bg-indigo-500/20', 'dark:text-indigo-300', 'dark:border-indigo-500/50');
         dom.guideStatusDot.classList.remove('bg-indigo-500');
         dom.guideStatusDot.classList.add('bg-slate-400');
-        dom.guideStatusText.textContent = '가이드선 OFF';
+        dom.guideStatusText.textContent = '영역 가이드 OFF';
+        showToast('영역 가이드를 껐습니다. 이제 선택한 영역만 점선으로 보입니다.', 'info');
       }
+      dom.btnToggleGuides.setAttribute('aria-pressed', state.showGuides ? 'true' : 'false');
       renderCanvas();
     }
 
@@ -1505,6 +1688,11 @@
         err.code = 'NO_API_KEY';
         throw err;
       }
+      if (!isAiUseOn()) {
+        const err = new Error('AI 사용이 꺼져 있습니다.');
+        err.code = 'AI_DISABLED';
+        throw err;
+      }
 
       let lastErr = null;
       for (const model of GEMINI_MODELS) {
@@ -1563,7 +1751,7 @@
       return String(res?.data?.text || '').replace(/[ \t]+/g, ' ').replace(/\n{2,}/g, '\n').trim();
     }
 
-    async function applyOfflineOcr(slide, box) {
+    async function applyOfflineOcr(slide, box, reason = '') {
       setLoading(true, '오프라인 OCR로 글자 인식 중...', '한국어·영어 모델을 준비하고 있습니다. 처음에는 조금 걸릴 수 있어요.');
       try {
         const text = await ocrBoxRegion(slide, box);
@@ -1571,9 +1759,14 @@
         pushUndoState(slide);
         box.text = text;
         autoFitBoxFontSize(box);
-        syncAllUI();
-        showToast('오프라인 OCR로 인식했습니다. 문맥 자동 보정은 상단 🔑 AI 키 등록 시 사용 가능합니다.', 'info');
+        finishBoxWork();
+        if (reason === 'ai-off') {
+          showToast('AI 사용이 꺼져 있어 오프라인 OCR로 인식했습니다. (키는 그대로 보관되어 있어요)', 'info');
+        } else {
+          showToast('오프라인 OCR로 인식했습니다. 문맥 자동 보정은 상단 🔑 AI 키 등록 시 사용 가능합니다.', 'info');
+        }
       } catch (err) {
+        // 선택과 인스펙터를 그대로 두어 직접 입력할 수 있게 한다
         showToast('글자를 인식하지 못했습니다. 영역을 다시 잡거나 텍스트를 직접 입력해 주세요.', 'warn');
       } finally {
         setLoading(false);
@@ -1584,8 +1777,9 @@
       const slide = getCurrentSlide();
       if (!slide || !box) return;
 
-      if (!getApiKey()) {
-        await applyOfflineOcr(slide, box);
+      /* 키가 있어도 사용자가 AI 사용을 꺼 두면 오프라인 OCR로 동작한다 (키는 유지) */
+      if (!isAiEnabled()) {
+        await applyOfflineOcr(slide, box, getApiKey() ? 'ai-off' : '');
         return;
       }
 
@@ -1643,8 +1837,8 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
           candidates: Array.isArray(parsed.candidates) ? parsed.candidates.slice(0, 3) : [],
         };
         autoFitBoxFontSize(box);
-        syncAllUI();
-        showToast('AI 문맥 복원 완료!', 'success');
+        finishBoxWork();
+        showToast('AI 문맥 복원 완료! 점선을 숨겼습니다. 다시 조정하려면 수정 영역을 한 번 누르세요.', 'success');
       } catch (err) {
         // AI 키 문제이거나 API 실패 → 오프라인 OCR로 폴백
         try {
@@ -1653,7 +1847,7 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
             pushUndoState(slide);
             box.text = text;
             autoFitBoxFontSize(box);
-            syncAllUI();
+            finishBoxWork();
             showToast(
               err && err.fatal
                 ? 'AI 키가 유효하지 않아 오프라인 OCR로 인식했습니다. 상단 🔑 AI 키를 확인해 주세요.'
@@ -1684,6 +1878,19 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
         if (go) openKeyModal();
         else showToast('영역을 직접 드래그하면 오프라인 OCR로 인식합니다.', 'info');
         return;
+      }
+
+      /* 키는 있지만 사용자가 AI 사용을 꺼 둔 경우 — 명시적으로 확인받은 뒤에만 켠다 */
+      if (!isAiUseOn()) {
+        const go = await askConfirm(
+          'AI 사용이 꺼져 있습니다',
+          '전체 자동 탐지는 Gemini Vision이 필요합니다. AI 사용을 켜고 실행할까요? 저장된 키는 그대로 보관됩니다.'
+        );
+        if (!go) {
+          showToast('AI 사용을 켜거나, 영역을 직접 드래그해 오프라인 OCR로 인식하세요.', 'info');
+          return;
+        }
+        setAiUse(true);
       }
 
       setLoading(true, 'AI 전체 슬라이드 깨진 글자 탐지 중...', '깨진 한글(□, ?) 영역을 찾아 한 번에 복원합니다.');
@@ -1751,8 +1958,8 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
           added++;
         }
 
-        syncAllUI();
         showToast(`${added}개의 깨진 글자 영역을 자동 복원했습니다!`, 'success');
+        finishBoxWork();
       } catch (err) {
         if (err && err.fatal) {
           showToast('AI 키가 유효하지 않습니다. 상단 🔑 AI 키를 확인하거나, 영역을 직접 드래그해 오프라인 OCR로 인식하세요.', 'warn');
@@ -2274,7 +2481,7 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
       box.gradEnd = sampled.gradEnd;
       box.aiMeta = null;
       state.isTextEditingSession = false;
-      syncAllUI();
+      finishBoxWork();
       showToast('글자를 지우고 주변 배경색으로 덮었습니다.', 'success');
     }
 
@@ -2303,8 +2510,89 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
         state.eyedropperTarget = null;
         state.selectedBoxId = null;
         state.isTextEditingSession = false;
+        hideEyedropperBanner();
+        /* 이동 모드에서는 인스펙터가 캔버스를 가리지 않도록 모바일 패널을 닫는다 */
+        if (window.innerWidth < 1280) dom.rightSidebar.classList.add('translate-x-full');
         syncAllUI();
       }
+    }
+
+    /* ==================== 💧 스포이드 (캔버스 픽셀 추출) ==================== */
+    /* 화면에 보이는 결과물(수정 반영 · 선택 점선 제외)에서 픽셀 색을 읽는다.
+       브라우저의 window.EyeDropper API는 지원하지 않는 환경이 많아 쓰지 않고,
+       어떤 환경에서도 동작하는 캔버스 픽셀 추출을 기본으로 한다. */
+    function sampleColorAt(slide, x, y) {
+      const px = clamp(Math.floor(x), 0, slide.width - 1);
+      const py = clamp(Math.floor(y), 0, slide.height - 1);
+      const readPixel = (source) => {
+        const d = source.getContext('2d', { willReadFrequently: true }).getImageData(px, py, 1, 1).data;
+        return rgbToHex(d[0], d[1], d[2]);
+      };
+      try {
+        const off = document.createElement('canvas');
+        off.width = slide.width;
+        off.height = slide.height;
+        renderSlideToContext(off.getContext('2d', { willReadFrequently: true }), slide, { includeGuides: false, selectedBoxId: null });
+        return readPixel(off);
+      } catch (err) {
+        /* 캔버스를 읽을 수 없는 환경(보안 테인트 등) → 원본 이미지 픽셀로 안전하게 폴백 */
+        try {
+          const off2 = document.createElement('canvas');
+          off2.width = slide.width;
+          off2.height = slide.height;
+          off2.getContext('2d', { willReadFrequently: true }).drawImage(slide.img, 0, 0, slide.width, slide.height);
+          return readPixel(off2);
+        } catch (_) {
+          return null;
+        }
+      }
+    }
+
+    function hideEyedropperBanner() {
+      if (dom.eyedropperBanner) dom.eyedropperBanner.classList.add('hidden');
+    }
+
+    function updateEyedropperBanner() {
+      if (!dom.eyedropperBanner) return;
+      if (!state.eyedropperTarget) {
+        hideEyedropperBanner();
+        return;
+      }
+      dom.eyedropperBanner.classList.remove('hidden');
+      if (dom.eyedropperBannerText) {
+        dom.eyedropperBannerText.textContent = state.eyedropperTarget === 'text'
+          ? '스포이드: 글자 색으로 쓸 지점을 누르세요'
+          : '스포이드: 배경 색으로 쓸 지점을 누르세요';
+      }
+    }
+
+    function beginEyedropper(target) {
+      const box = getSelectedBox();
+      if (!box) {
+        showToast('먼저 슬라이드에서 수정 영역을 선택해 주세요.', 'warn');
+        return;
+      }
+      state.eyedropperTarget = target;
+      state.isTextEditingSession = false;
+      state.eyedropperReopenInspector = window.innerWidth < 1280 && !dom.rightSidebar.classList.contains('translate-x-full');
+      /* 모바일에서는 인스펙터 패널이 캔버스를 가리므로 닫고, 추출 후 다시 연다 */
+      if (window.innerWidth < 1280) dom.rightSidebar.classList.add('translate-x-full');
+      updateFloatingQuickBar();
+      dom.mainCanvas.style.cursor = 'copy';
+      updateEyedropperBanner();
+    }
+
+    function cancelEyedropper(options = {}) {
+      const wasActive = Boolean(state.eyedropperTarget);
+      state.eyedropperTarget = null;
+      if (dom.mainCanvas) dom.mainCanvas.style.cursor = state.canvasMode === 'pan' ? 'grab' : 'crosshair';
+      updateEyedropperBanner();
+      updateFloatingQuickBar();
+      if (options.reopen && state.eyedropperReopenInspector && window.innerWidth < 1280) {
+        dom.rightSidebar.classList.remove('translate-x-full');
+      }
+      if (options.reopen) state.eyedropperReopenInspector = false;
+      return wasActive;
     }
 
     function ensureTextEditUndoPoint() {
@@ -2450,10 +2738,31 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
         dom.rightSidebar.classList.toggle('translate-x-full');
       });
 
-      // Mobile / Tablet Inspector Close
+      // Mobile / Tablet Inspector Close → 선택도 함께 해제 (점선 제거)
       dom.btnCloseInspector.addEventListener('click', () => {
-        dom.rightSidebar.classList.add('translate-x-full');
+        clearSelection({ closeMobileInspector: true });
       });
+
+      // 편집 완료 → 선택 해제 (결과를 점선 없이 바로 확인)
+      const finishEditing = () => {
+        clearSelection({ closeMobileInspector: true });
+        showToast('편집을 마쳤습니다. 선택 점선을 숨겼어요.', 'info');
+      };
+      dom.btnFinishEdit.addEventListener('click', finishEditing);
+      dom.btnFinishEditTop.addEventListener('click', finishEditing);
+
+      // Eyedropper banner cancel
+      dom.btnCancelEyedropper.addEventListener('click', () => {
+        cancelEyedropper({ reopen: true });
+      });
+
+      // 캔버스·패널 바깥의 빈 곳을 누르면 선택 해제 (버튼·입력 등 조작 요소는 제외)
+      document.addEventListener('pointerdown', (e) => {
+        if (state.eyedropperTarget) return;
+        if (state.selectedBoxId === null) return;
+        if (e.target.closest('button, a, input, select, textarea, label, [role="switch"], #stageContainer, #rightSidebar, #leftSidebar')) return;
+        clearSelection({ closeMobileInspector: false });
+      }, true);
 
       // ==================== GEMINI API KEY MODAL ====================
       dom.btnOpenKeyModal.addEventListener('click', openKeyModal);
@@ -2471,12 +2780,27 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
         }
         try {
           localStorage.setItem(AI_KEY_STORAGE, key);
+          localStorage.setItem(AI_ENABLED_STORAGE, '1'); // 새 키를 넣으면 AI 사용을 켜진 상태로
           updateAiKeyUI();
           closeKeyModal();
-          showToast('Gemini API 키를 저장했습니다. AI 문맥 복원이 활성화됩니다.', 'success');
+          showToast('Gemini API 키를 저장하고 AI 사용을 켰습니다.', 'success');
         } catch (_) {
           showToast('이 브라우저에서는 키를 저장할 수 없습니다.', 'error');
         }
+      });
+      dom.btnToggleAiUse.addEventListener('click', () => {
+        if (!getApiKey()) {
+          showToast('먼저 API 키를 저장해 주세요.', 'warn');
+          return;
+        }
+        const next = !isAiUseOn();
+        setAiUse(next);
+        showToast(
+          next
+            ? 'AI 사용을 켰습니다. Gemini 문맥 복원을 사용합니다.'
+            : 'AI 사용을 껐습니다. 키는 지우지 않고 보관했으며, 오프라인 OCR로 동작합니다.',
+          next ? 'success' : 'info'
+        );
       });
       dom.btnDeleteKey.addEventListener('click', () => {
         try { localStorage.removeItem(AI_KEY_STORAGE); } catch (_) {}
@@ -2577,13 +2901,18 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
         if (e.ctrlKey || e.metaKey) {
           e.preventDefault();
           const delta = e.deltaY < 0 ? 0.08 : -0.08;
-          setZoom(Math.round((state.zoom + delta) * 100) / 100, true);
+          setZoom(Math.round((state.zoom + delta) * 100) / 100, true, { x: e.clientX, y: e.clientY });
         }
       }, { passive: false });
 
       // Click empty stage area around canvas to deselect active box (hides dashed outline immediately)
       dom.stageContainer.addEventListener('pointerdown', (e) => {
         if (e.target === dom.stageContainer || e.target === dom.canvasOuterFlex) {
+          if (state.eyedropperTarget) {
+            cancelEyedropper({ reopen: true });
+            showToast('스포이드를 취소했습니다. 다시 시도하려면 스포이드 버튼을 눌러 주세요.', 'info');
+            return;
+          }
           if (state.selectedBoxId !== null) {
             state.selectedBoxId = null;
             state.isTextEditingSession = false;
@@ -2598,6 +2927,34 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
         if (!slide) return;
         const pt = getCanvasCoords(e);
 
+        // 💧 스포이드 모드 — 이동(패닝) 모드에서도 먼저 처리한다
+        if (state.eyedropperTarget) {
+          const pickedHex = sampleColorAt(slide, pt.x, pt.y);
+          const targetBox = getSelectedBox();
+          if (!targetBox) {
+            cancelEyedropper({ reopen: true });
+            showToast('선택한 수정 영역이 없어 색을 적용하지 못했습니다. 영역을 다시 선택해 주세요.', 'warn');
+            return;
+          }
+          if (!pickedHex) {
+            cancelEyedropper({ reopen: true });
+            showToast('이 지점의 색을 읽을 수 없습니다. 다른 지점을 눌러 주세요.', 'warn');
+            return;
+          }
+          const isText = state.eyedropperTarget === 'text';
+          pushUndoState(slide);
+          if (isText) {
+            targetBox.textColor = pickedHex;
+          } else {
+            targetBox.bgColor = pickedHex;
+            targetBox.bgMode = 'solid';
+          }
+          cancelEyedropper({ reopen: true });
+          syncAllUI();
+          showToast(`${isText ? '글자' : '배경'} 색상 추출: ${pickedHex.toUpperCase()}`, 'success');
+          return;
+        }
+
         // ✋ 이동 모드 — 캐버스는 건드리지 않고 화면만 움직인다 (터치는 브라우저 기본 패닝)
         if (state.canvasMode === 'pan') {
           if (e.pointerType === 'mouse') {
@@ -2611,31 +2968,6 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
             };
             dom.mainCanvas.style.cursor = 'grabbing';
           }
-          return;
-        }
-        // Eyedropper mode
-        if (state.eyedropperTarget) {
-          const off = document.createElement('canvas');
-          off.width = slide.width;
-          off.height = slide.height;
-          const octx = off.getContext('2d');
-          octx.drawImage(slide.img, 0, 0, slide.width, slide.height);
-          const px = octx.getImageData(clamp(Math.floor(pt.x), 0, slide.width - 1), clamp(Math.floor(pt.y), 0, slide.height - 1), 1, 1).data;
-          const hex = rgbToHex(px[0], px[1], px[2]);
-          const box = getSelectedBox();
-          if (box) {
-            pushUndoState(slide);
-            if (state.eyedropperTarget === 'text') {
-              box.textColor = hex;
-            } else {
-              box.bgColor = hex;
-              box.bgMode = 'solid';
-            }
-          }
-          state.eyedropperTarget = null;
-          dom.mainCanvas.style.cursor = 'crosshair';
-          syncAllUI();
-          showToast(`색상 추출됨: ${hex.toUpperCase()}`, 'success');
           return;
         }
 
@@ -2990,11 +3322,7 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
         }
       });
 
-      dom.btnEyedropText.addEventListener('click', () => {
-        state.eyedropperTarget = 'text';
-        dom.mainCanvas.style.cursor = 'copy';
-        showToast('슬라이드 위에서 추출할 글자 색상을 클릭하세요.');
-      });
+      dom.btnEyedropText.addEventListener('click', () => beginEyedropper('text'));
 
       dom.propBgMode.addEventListener('change', () => {
         const box = getSelectedBox();
@@ -3046,11 +3374,7 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
         }
       });
 
-      dom.btnEyedropBg.addEventListener('click', () => {
-        state.eyedropperTarget = 'bg';
-        dom.mainCanvas.style.cursor = 'copy';
-        showToast('슬라이드 위에서 추출할 배경 색상을 클릭하세요.');
-      });
+      dom.btnEyedropBg.addEventListener('click', () => beginEyedropper('bg'));
 
       dom.propPadding.addEventListener('input', () => {
         const box = getSelectedBox();
@@ -3107,8 +3431,8 @@ ${manualHintText ? `사용자가 현재 입력해 둔 참고 텍스트: "${manua
 
         if (e.key === 'Escape') {
           if (state.eyedropperTarget) {
-            state.eyedropperTarget = null;
-            dom.mainCanvas.style.cursor = 'crosshair';
+            cancelEyedropper({ reopen: true });
+            return;
           }
           if (state.selectedBoxId !== null) {
             state.selectedBoxId = null;
