@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SlideFix Pro 사용설명서 | 이미지·PDF 한글 수정 에디터</title>
+<script>
+  /* 인페이지 모달(iframe) 임베드 감지 — 이때만 설명서 자체 상단 바를 숨깁니다.
+     독립 창·PC 팝업(window.open)에서는 window.self === window.top 이므로 상단 바가 그대로 보입니다. */
+  (function () {
+    var embedded = false;
+    try { embedded = (window.self !== window.top); } catch (e) { embedded = true; }
+    if (!embedded) {
+      try { embedded = /(^|[?&])(embed|modal)=1(&|$)/.test(window.location.search); } catch (e) {}
+    }
+    if (embedded) {
+      document.documentElement.className = (document.documentElement.className + ' is-embed').trim();
+    }
+  })();
+</script>
+<style>
+  :root{
+    --navy:#0f172a;
+    --navy2:#1e293b;
+    --blue:#1d4ed8;
+    --blue-l:#2563eb;
+    --ink:#334155;
+    --ink-strong:#0f172a;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --soft:#f8fafc;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    margin:0;
+    background:#eef2f7;
+    color:var(--ink);
+    font-family:"Pretendard","Pretendard Variable",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR","Noto Sans CJK KR",sans-serif;
+    font-size:15px;
+    line-height:1.75;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--blue);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+
+  /* ── 상단 도구 막대 ─────────────────────────── */
+  .toolbar{
+    background:var(--navy);
+    color:#e2e8f0;
+    border-bottom:1px solid #1e293b;
+    position:sticky;
+    top:0;
+    z-index:30;
+  }
+  .toolbar-inner{
+    max-width:920px;
+    margin:0 auto;
+    padding:10px 18px;
+    overflow:hidden;
+  }
+  .toolbar-title{
+    float:left;
+    padding-top:5px;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    color:#fff;
+    white-space:nowrap;
+  }
+  .toolbar-actions{
+    float:right;
+    white-space:nowrap;
+  }
+  .btn{
+    display:inline-block;
+    font-family:inherit;
+    font-size:12.5px;
+    font-weight:700;
+    line-height:1;
+    padding:8px 13px;
+    border-radius:8px;
+    border:1px solid #334155;
+    background:#1e293b;
+    color:#e2e8f0;
+    cursor:pointer;
+    margin-left:6px;
+    transition:background .15s ease,border-color .15s ease;
+  }
+  .btn:hover{background:#334155;border-color:#475569;}
+  .btn-primary{background:var(--blue-l);border-color:var(--blue-l);color:#fff;}
+  .btn-primary:hover{background:#3b82f6;border-color:#3b82f6;}
+
+  /* ── 인페이지 모달(iframe) 임베드: 자체 상단 바 숨김 ── */
+  html.is-embed .toolbar{display:none!important;}
+  html.is-embed body{background:#fff;}
+  html.is-embed .page{max-width:none;box-shadow:none;border-radius:0;}
+  html.is-embed .hero{padding-top:26px;}
+
+  /* ── 본문 카드 ─────────────────────────────── */
+  .page{
+    max-width:920px;
+    margin:0 auto;
+    background:#fff;
+    box-shadow:0 1px 3px rgba(15,23,42,.06),0 12px 32px rgba(15,23,42,.06);
+    border-radius:0 0 14px 14px;
+    overflow:hidden;
+  }
+
+  /* ── 히어로 ────────────────────────────────── */
+  .hero{
+    background:linear-gradient(135deg,#0f172a 0%,#16243f 55%,#1e2a5a 100%);
+    color:#fff;
+    padding:34px 34px 30px;
+  }
+  .hero-kicker{
+    display:inline-block;
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.02em;
+    color:#93c5fd;
+    background:rgba(59,130,246,.16);
+    border:1px solid rgba(96,165,250,.35);
+    border-radius:999px;
+    padding:4px 11px;
+    margin-bottom:14px;
+  }
+  .hero h1{
+    margin:0 0 8px;
+    font-size:27px;
+    line-height:1.35;
+    font-weight:800;
+    letter-spacing:-0.02em;
+    color:#fff;
+  }
+  .hero p{margin:0;color:#cbd5e1;font-size:14px;}
+  .hero-meta{margin-top:18px;font-size:12.5px;color:#94a3b8;}
+  .hero-meta span{display:inline-block;margin-right:14px;}
+  .hero-meta b{color:#e2e8f0;font-weight:700;}
+
+  .wrap{padding:0 34px 42px;}
+
+  /* ── 3분 요약 ──────────────────────────────── */
+  .quick{
+    margin-top:-18px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    box-shadow:0 6px 18px rgba(15,23,42,.07);
+    padding:18px 20px;
+    position:relative;
+  }
+  .quick h2{
+    margin:0 0 10px;
+    font-size:13px;
+    font-weight:800;
+    color:var(--blue);
+    letter-spacing:.01em;
+  }
+  .quick ol{
+    margin:0;
+    padding-left:20px;
+    font-size:14px;
+    color:var(--ink);
+  }
+  .quick ol li{margin:4px 0;}
+  .quick ol li b{color:var(--ink-strong);}
+
+  /* ── 목차 ──────────────────────────────────── */
+  .toc{
+    margin:26px 0 8px;
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:var(--soft);
+    padding:16px 20px;
+  }
+  .toc h2{
+    margin:0 0 8px;
+    font-size:12px;
+    font-weight:800;
+    color:var(--muted);
+    letter-spacing:.06em;
+  }
+  .toc ol{margin:0;padding-left:18px;font-size:14px;}
+  .toc li{margin:3px 0;}
+  .toc li a{font-weight:600;color:#1e3a8a;}
+
+  /* ── 섹션 ──────────────────────────────────── */
+  section{margin-top:40px;}
+  .sec-head{
+    display:table;
+    width:100%;
+    border-bottom:1px solid var(--line);
+    padding-bottom:10px;
+    margin-bottom:18px;
+  }
+  .sec-num{
+    display:table-cell;
+    width:26px;
+    vertical-align:top;
+  }
+  .sec-num span{
+    display:block;
+    width:26px;height:26px;
+    border-radius:7px;
+    background:var(--blue);
+    color:#fff;
+    font-size:13px;
+    font-weight:800;
+    text-align:center;
+    line-height:26px;
+    margin-top:3px;
+  }
+  .sec-head h2{
+    display:table-cell;
+    vertical-align:top;
+    padding-left:10px;
+    margin:0;
+    font-size:19px;
+    font-weight:800;
+    color:var(--ink-strong);
+    letter-spacing:-0.02em;
+    line-height:1.45;
+  }
+  h3{
+    font-size:15.5px;
+    font-weight:800;
+    color:var(--ink-strong);
+    margin:26px 0 8px;
+    letter-spacing:-0.01em;
+  }
+  h4{
+    font-size:14px;
+    font-weight:800;
+    color:#1e293b;
+    margin:18px 0 6px;
+  }
+  p{margin:10px 0;}
+  ul,ol{padding-left:20px;}
+  li{margin:4px 0;}
+  code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12.5px;
+    background:#f1f5f9;
+    border:1px solid #e2e8f0;
+    border-radius:5px;
+    padding:1px 5px;
+    color:#0f172a;
+  }
+  .kbd{
+    display:inline-block;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:11.5px;
+    font-weight:700;
+    padding:1px 6px;
+    border-radius:5px;
+    border:1px solid #cbd5e1;
+    background:#f8fafc;
+    color:#334155;
+  }
+
+  /* ── 표 ────────────────────────────────────── */
+  .tbl-wrap{overflow-x:auto;margin:14px 0 6px;}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+    background:#fff;
+  }
+  caption{
+    caption-side:top;
+    text-align:left;
+    font-size:12px;
+    color:var(--muted);
+    padding-bottom:6px;
+  }
+  th,td{
+    border:1px solid var(--line);
+    padding:9px 11px;
+    vertical-align:top;
+    text-align:left;
+  }
+  thead th{
+    background:#0f172a;
+    color:#fff;
+    font-weight:700;
+    font-size:12.5px;
+    border-color:#0f172a;
+    white-space:nowrap;
+  }
+  tbody tr:nth-child(even) td{background:#f8fafc;}
+  td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink-strong);}
+  td.c{text-align:center;white-space:nowrap;}
+  .tag{
+    display:inline-block;
+    font-size:11.5px;
+    font-weight:700;
+    padding:1px 7px;
+    border-radius:5px;
+    white-space:nowrap;
+  }
+  .tag-ok{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0;}
+  .tag-bad{background:#ffe4e6;color:#9f1239;border:1px solid #fecdd3;}
+  .tag-mid{background:#fef3c7;color:#92400e;border:1px solid #fde68a;}
+  .tag-ind{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe;}
+
+  /* ── 강조 박스 ─────────────────────────────── */
+  .box{
+    border-radius:10px;
+    padding:13px 16px;
+    margin:14px 0;
+    font-size:13.5px;
+    border:1px solid;
+  }
+  .box p:first-child{margin-top:0;}
+  .box p:last-child{margin-bottom:0;}
+  .box .box-t{
+    display:block;
+    font-weight:800;
+    font-size:12.5px;
+    margin-bottom:4px;
+  }
+  .note{background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;}
+  .note .box-t{color:#1d4ed8;}
+  .warn{background:#fffbeb;border-color:#fde68a;color:#78350f;}
+  .warn .box-t{color:#b45309;}
+  .tip{background:#ecfdf5;border-color:#a7f3d0;color:#064e3b;}
+  .tip .box-t{color:#047857;}
+
+  /* ── 그림 ──────────────────────────────────── */
+  figure{
+    margin:18px 0 6px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    background:#f1f5f9;
+  }
+  figure a{display:block;line-height:0;}
+  figure img{display:block;width:100%;height:auto;}
+  figcaption{
+    font-size:12px;
+    color:var(--muted);
+    padding:8px 12px;
+    border-top:1px solid var(--line);
+    background:#fff;
+    line-height:1.6;
+  }
+  figcaption b{color:#334155;}
+  .fig-portrait img{width:80%;margin:0 auto;}
+  .fig-portrait a{display:flex;justify-content:center;background:#f1f5f9;}
+
+  /* ── 단계 ──────────────────────────────────── */
+  .step{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px 20px 6px;
+    margin:22px 0;
+    background:#fff;
+  }
+  .step-head{margin-bottom:6px;}
+  .step-badge{
+    display:inline-block;
+    background:var(--navy);
+    color:#fff;
+    font-size:11.5px;
+    font-weight:800;
+    letter-spacing:.04em;
+    padding:3px 9px;
+    border-radius:5px;
+    margin-right:8px;
+    vertical-align:2px;
+  }
+  .step-head h3{
+    display:inline;
+    margin:0;
+    font-size:15.5px;
+  }
+  .step .lead{
+    font-size:13.5px;
+    color:#475569;
+    margin:6px 0 0;
+  }
+
+  /* ── 버튼 설명 칩 ──────────────────────────── */
+  .chiprow{margin:10px 0 4px;}
+  .chip{
+    display:inline-block;
+    font-size:12px;
+    font-weight:700;
+    padding:2px 9px;
+    border-radius:6px;
+    margin:0 6px 6px 0;
+    white-space:nowrap;
+  }
+  .chip-ui{background:#1e293b;color:#fff;}
+  .chip-g{background:#2563eb;color:#fff;}
+  .chip-e{background:#059669;color:#fff;}
+  .chip-copy{background:#fff;color:#334155;border:1px solid #cbd5e1;}
+
+  /* ── FAQ ───────────────────────────────────── */
+  .faq{border:1px solid var(--line);border-radius:10px;padding:14px 17px;margin:12px 0;background:var(--soft);}
+  .faq .q{
+    font-size:13.5px;
+    font-weight:800;
+    color:var(--ink-strong);
+    margin:0 0 6px;
+  }
+  .faq .q span{color:var(--blue);margin-right:6px;}
+  .faq .a{margin:0;font-size:13.5px;color:#475569;}
+
+  /* ── 푸터 ──────────────────────────────────── */
+  footer{
+    margin-top:44px;
+    border-top:1px solid var(--line);
+    padding-top:16px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  footer p{margin:4px 0;}
+
+  /* ── 좁은 화면 ─────────────────────────────── */
+  @media (max-width:640px){
+    body{font-size:14.5px;}
+    .hero{padding:26px 20px 24px;}
+    .hero h1{font-size:21px;}
+    .wrap{padding:0 20px 30px;}
+    .quick{margin-top:-14px;padding:15px 16px;}
+    .toolbar-inner{padding:9px 14px;}
+    .btn{font-size:12px;padding:7px 10px;}
+    .fig-portrait img{width:100%;}
+    html.is-embed .hero{padding:22px 18px 20px;}
+    html.is-embed .wrap{padding:0 18px 26px;}
+  }
+
+  /* ── 인쇄(PDF) ─────────────────────────────── */
+  @media print{
+    @page{
+      size:A4;
+      margin:14mm 13mm 15mm;
+    }
+    body{background:#fff;font-size:9.9pt;line-height:1.58;}
+    section{margin-top:16px;}
+    h3{margin:16px 0 6px;}
+    h4{margin:12px 0 4px;}
+    p{margin:7px 0;}
+    .faq{padding:10px 14px;margin:9px 0;}
+    .box{margin:10px 0;padding:10px 13px;}
+    .toc{margin:14px 0 4px;padding:12px 16px;}
+    .quick{padding:14px 16px;}
+    .toolbar,.no-print{display:none!important;}
+    .page{max-width:none;box-shadow:none;border-radius:0;margin:0;}
+    .hero{padding:16px 0 12px;background:#fff;color:#0f172a;border-bottom:2px solid #0f172a;}
+    .hero-kicker{color:#1d4ed8;background:#eff6ff;border-color:#bfdbfe;}
+    .hero h1{font-size:19pt;color:#0f172a;}
+    .hero p{color:#334155;}
+    .hero-meta{color:#64748b;margin-top:8px;}
+    .hero-meta b{color:#0f172a;}
+    .wrap{padding:0;}
+    .quick{margin-top:12px;box-shadow:none;border:1px solid #cbd5e1;page-break-inside:avoid;}
+    .toc{page-break-inside:avoid;}
+    section{page-break-before:auto;margin-top:20px;}
+    .sec-head{page-break-after:avoid;}
+    h3,h4{page-break-after:avoid;}
+    figure,.box,.faq{page-break-inside:avoid;}
+    .step{page-break-inside:auto;}
+    .step-head{page-break-after:avoid;}
+    figure{border-color:#cbd5e1;}
+    figure.fig-portrait a{text-align:center;}
+    figure.fig-portrait img{width:82%;margin:0 auto;}
+    figcaption{background:#fff;}
+    thead{display:table-header-group;}
+    caption{page-break-after:avoid;}
+    tr{page-break-inside:avoid;}
+    .tbl-wrap{overflow:visible;}
+    .tbl-wrap.keep{page-break-inside:avoid;}
+    table{font-size:9pt;page-break-inside:auto;}
+    th,td{padding:5px 7px;}
+    a{color:#1d4ed8;}
+    .page-break{page-break-before:always;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ─────────────── 상단 도구 막대 ─────────────── -->
+<div class="toolbar no-print">
+  <div class="toolbar-inner">
+    <span class="toolbar-title">SlideFix Pro 사용설명서</span>
+    <div class="toolbar-actions">
+      <a class="btn btn-primary" role="button" href="#" onclick="window.print();return false;"> 인쇄 / PDF 저장</a>
+      <a class="btn" role="button" href="#" onclick="closeWindow();return false;">✕ 창 닫기</a>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ─────────────── 히어로 ─────────────── -->
+  <header class="hero">
+    <span class="hero-kicker">사용설명서 · User Guide</span>
+    <h1>이미지·PDF 속 깨진 한글<br>드래그 한 번으로 되살립니다</h1>
+    <p>공유받은 슬라이드 캡처나 PDF에서 글자가 <b>□</b>, <b>?</b> 로 뭉개졌을 때 — 그 줄만 드래그하면<br>원래 문장으로 복원하고 원본 스타일(크기·굵기·색·정렬)에 맞춰 다시 그려 주는 무설치 웹 에디터입니다.</p>
+    <div class="hero-meta">
+      <span>주소 <b>sliderfix-pro.vercel.app</b></span>
+      <span>대상 <b>2026-11-26 배포본</b></span>
+      <span>화면 캡처 <b>2026.11.27 · 1280×800</b></span>
+      <span>문서 <b>v1.0</b></span>
+    </div>
+  </header>
+
+  <div class="wrap">
+
+    <!-- ─────────────── 3분 요약 ─────────────── -->
+    <div class="quick">
+      <h2>3분 요약 — 이 세 가지만 기억하세요</h2>
+      <ol>
+        <li><b>열기</b> — <b>[파일 열기]</b>로 PNG · JPG · WebP · PDF를 엽니다. PDF는 <b>페이지마다 슬라이드 한 장</b>이 됩니다.</li>
+        <li><b>드래그</b> — 깨진 글자가 있는 <b>줄을 사각형으로 감쌉니다.</b> 손을 떼면 수정 메뉴가 열리고, 글자를 읽어 옵니다. (AI 키가 없으면 오프라인 OCR)</li>
+        <li><b>다듬고 내보내기</b> — 복원 텍스트를 확인·수정하고 <b>✓ 완료</b> → <b>[내보내기]</b>로 PNG · JPG · PDF를 저장합니다.</li>
+      </ol>
+    </div>
+
+    <!-- ─────────────── 목차 ─────────────── -->
+    <nav class="toc no-print">
+      <h2>목 차</h2>
+      <ol>
+        <li><a href="#s1">이 도구는 무엇인가요?</a></li>
+        <li><a href="#s2">화면 한눈에 보기</a></li>
+        <li><a href="#s3">실전 사용법 5단계</a></li>
+        <li><a href="#s4">AI 키와 오프라인 OCR — 무엇이 다른가요</a></li>
+        <li><a href="#s5">한계·주의사항·자주 묻는 질문</a></li>
+      </ol>
+    </nav>
+
+    <!-- ═══════════════ 1. 무엇인가요 ═══════════════ -->
+    <section id="s1">
+      <div class="sec-head">
+        <div class="sec-num"><span>1</span></div>
+        <h2>이 도구는 무엇인가요?</h2>
+      </div>
+
+      <p>
+        슬라이드를 <b>이미지(PNG·JPG)나 PDF로만</b> 받으면 글자를 고칠 수 없습니다. 원본 편집 파일이 없기 때문입니다.
+        SlideFix Pro는 그 이미지 위에서 <b>문제가 된 부분만 다시 그리는</b> 방식으로 이 문제를 풉니다.
+        드래그한 영역의 글자를 읽고 → 문맥에 맞는 한국어를 찾아 → 원본의 글자 크기·굵기·색·정렬을 흉내 내 그 자리에 덮어 그립니다.
+      </p>
+
+      <div class="tbl-wrap keep">
+        <table>
+          <caption>표 1. SlideFix Pro가 하는 일 — 다섯 단계</caption>
+          <thead>
+            <tr><th style="width:20%">단계</th><th style="width:46%">하는 일</th><th>쓰는 화면</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><b>① 불러오기</b></td><td>PNG · JPG · WebP 이미지, 다중 페이지 PDF. 여러 파일을 한 번에 열 수 있습니다.</td><td>[파일 열기] · 화면에 끌어다 놓기</td></tr>
+            <tr><td><b>② 영역 지정</b></td><td>깨진 글자 줄을 마우스·펜으로 드래그해 사각형 영역을 만듭니다.</td><td>캔버스 위 드래그</td></tr>
+            <tr><td><b>③ 글자 읽기</b></td><td>영역의 글자를 인식합니다. AI 키가 있으면 문맥으로 복원, 없으면 오프라인 OCR로 인식합니다.</td><td>드래그 직후 자동 실행</td></tr>
+            <tr><td><b>④ 스타일 맞추기</b></td><td>영역 안의 실제 글자 잉크를 재서 <b>크기 · 굵기 · 색 · 정렬</b>을 추정하고, 배경도 주변 색으로 채웁니다.</td><td>오른쪽 <b>수정</b> 패널</td></tr>
+            <tr><td><b>⑤ 내보내기</b></td><td>현재 슬라이드를 PNG(고화질) · JPG(경량)로, 또는 전체 슬라이드를 다중 페이지 PDF로 저장합니다.</td><td>[내보내기] 메뉴</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="box note">
+        <span class="box-t">‘사진 위에 덧그리기’라는 점을 먼저 이해해 주세요</span>
+        이 도구는 숨은 텍스트 레이어를 고치는 편집기가 아니라, <b>보이는 그림 위에 그 부분만 다시 그리는</b> 도구입니다.
+        그래서 결과는 원본 폰트와 <b>거의 같게</b> 보이도록 맞춰지지만, 확대하면 미세하게 다를 수 있습니다.
+        발표용 슬라이드·보고서 캡처를 ‘다시 찍지 않고’ 급하게 손볼 때 가장 효과가 큽니다.
+      </div>
+
+      <h3>AI를 켤 때와 끌 때 — 무엇이 달라지나요</h3>
+      <div class="tbl-wrap keep">
+        <table>
+          <caption>표 2. AI 문맥 복원 ON / OFF 비교 (키가 없어도 기본 기능은 모두 동작합니다)</caption>
+          <thead>
+            <tr><th style="width:22%">구분</th><th style="width:39%">AI 사용 <span class="tag tag-ok">ON</span> — Gemini 키 등록</th><th>AI 사용 <span class="tag tag-bad">OFF</span> — 키 없음 또는 스위치 끔</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>드래그 후 글자 처리</b></td>
+              <td>영역의 문맥을 읽어 <b>자연스러운 한국어로 복원</b>하고, 무엇이 어떻게 바뀌었는지 메모를 남깁니다.</td>
+              <td>브라우저 안에서 도는 <b>오프라인 OCR</b>(한국어+영어)이 글자를 읽습니다. 깨진 글자는 엉뚱하게 읽힐 수 있어 직접 손보는 경우가 있습니다.</td>
+            </tr>
+            <tr>
+              <td><b>전체 자동 탐지</b></td>
+              <td>왼쪽 아래 <b>[AI 깨진 글자 자동 탐지·복원]</b>으로 슬라이드 전체의 깨진 곳을 한 번에 찾아냅니다.</td>
+              <td>사용할 수 없습니다(키 필요 안내). 대신 영역을 하나씩 드래그합니다.</td>
+            </tr>
+            <tr>
+              <td><b>필요한 것</b></td>
+              <td>Google AI Studio에서 발급한 Gemini API 키(무료 등급 가능).</td>
+              <td>없음. 첫 사용 때 인식 모델만 내려받습니다.</td>
+            </tr>
+            <tr>
+              <td><b>속도</b></td>
+              <td>영역 한 곳당 몇 초(네트워크 상태에 따라).</td>
+              <td>첫 인식은 인식 모델을 내려받느라 수십 초 걸리고, 그다음 영역부터는 몇 초.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="box warn">
+        <span class="box-t">첫 실행에는 인터넷이 필요합니다</span>
+        이 앱은 화면을 그리는 라이브러리(PDF.js · jsPDF · Tesseract.js)와 한국어 폰트를 <b>CDN에서 그때그때 불러옵니다.</b>
+        오프라인 OCR도 첫 실행 때 인식 모델을 내려받습니다. 한 번 열어 둔 뒤에는 캐시로 빨라집니다.
+        <b>슬라이드 이미지 자체는 어디로도 업로드되지 않습니다.</b>
+      </div>
+    </section>
+
+    <!-- ═══════════════ 2. 화면 한눈에 보기 ═══════════════ -->
+    <section id="s2">
+      <div class="sec-head">
+        <div class="sec-num"><span>2</span></div>
+        <h2>화면 한눈에 보기</h2>
+      </div>
+
+      <p>
+        접속 주소는 <b>https://sliderfix-pro.vercel.app/</b> 입니다. 처음 열면 <b>연습용 샘플 슬라이드</b>가 자동으로 열립니다 —
+        제목과 카드에 일부러 깨진 글자(□, ?)를 넣어 둔 슬라이드라, 파일을 준비하지 않아도 바로 따라 해 볼 수 있습니다.
+      </p>
+
+      <figure>
+        <a href="./assets/slidefix-01-start.png" target="_blank" rel="noopener">
+          <img src="./assets/slidefix-01-start.png" alt="SlideFix Pro 첫 화면 — 내장 샘플 슬라이드, 왼쪽 슬라이드·수정 레이어 목록, 오른쪽 수정 패널, 하단 모드·확대·영역 가이드 바">
+        </a>
+        <figcaption><b>화면 1.</b> 첫 화면 — ①상단 도구 막대 ②슬라이드 목록 ③수정 레이어 목록 ④캔버스 ⑤오른쪽 수정 패널 ⑥하단 모드·확대·영역 가이드 바. 샘플 슬라이드의 <b>‘자□화’, ‘데□터’, ‘작□’, ‘에□전트’</b>가 연습 대상입니다. <span class="no-print">(클릭하면 원본 크기로 열립니다.)</span></figcaption>
+      </figure>
+
+      <div class="tbl-wrap">
+        <table>
+          <caption>표 3. 화면 구성 요소와 역할 — 실제 버튼 이름 그대로</caption>
+          <thead>
+            <tr><th style="width:5%">No</th><th style="width:24%">영역</th><th>하는 일</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="c">①</td><td><b>상단 도구 막대</b></td><td>왼쪽부터 <b>[파일 열기]</b> · <b>[작업 닫기]</b> · 실행 취소/다시 실행 · <b>[원본 비교]</b> · <b>[🔑 AI 키]</b> · <b>[프로젝트]</b> · <b>[내보내기]</b> · 라이트/다크 전환.</td></tr>
+            <tr><td class="c">②</td><td><b>슬라이드 목록</b></td><td>연 슬라이드의 썸네일. <b>수정 N</b> 배지는 그 슬라이드에 얹은 수정 영역 개수입니다. 위의 <b>+ 페이지 추가</b>로 파일을 더 열 수 있습니다.</td></tr>
+            <tr><td class="c">③</td><td><b>수정 레이어 목록</b></td><td>이 슬라이드에 만든 수정 영역을 한 줄씩. <b>눈 아이콘</b>으로 잠시 숨기고, <b>×</b>로 개별 삭제합니다. 항목을 누르면 그 영역이 선택됩니다.</td></tr>
+            <tr><td class="c">④</td><td><b>캔버스</b></td><td>슬라이드 원본과 수정 결과가 함께 보이는 작업판. 여기서 드래그해 영역을 만듭니다.</td></tr>
+            <tr><td class="c">⑤</td><td><b>수정 패널</b></td><td>선택한 영역의 글자·글꼴·색·배경을 다듬는 곳. 선택 전에는 단축키 안내가 보입니다.</td></tr>
+            <tr><td class="c">⑥</td><td><b>하단 바</b></td><td><b>✏️ 선택 / ✋ 이동</b> 모드, <b>− 100% +</b> 확대·축소, <b>[맞춤]</b>, <b>[영역 가이드 ON/OFF]</b>.</td></tr>
+            <tr><td class="c">⑦</td><td><b>플로팅 퀵바</b></td><td>영역을 드래그하면 그 위에 뜨는 작은 도구막대 — AI 복원 · 자동맞춤 · 🧹 지우기 · 복제 · 삭제.</td></tr>
+            <tr><td class="c">⑧</td><td><b>AI 자동 탐지</b></td><td>왼쪽 목록 맨 아래 <b>[AI 깨진 글자 자동 탐지·복원]</b>. 슬라이드 전체를 훑어 깨진 곳을 한 번에 찾습니다(AI 키 필요).</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>작업을 <b>[작업 닫기]</b>로 접으면 아래처럼 <b>불러오기 화면</b>이 나옵니다. 여기서 <b>[파일 선택하기]</b> 또는 <b>[샘플 슬라이드 불러오기]</b>로 시작합니다.</p>
+
+      <figure>
+        <a href="./assets/slidefix-02-dropzone.png" target="_blank" rel="noopener">
+          <img src="./assets/slidefix-02-dropzone.png" alt="작업을 닫은 뒤 불러오기 화면 — 이미지 또는 PDF 파일 불러오기 안내와 파일 선택하기·샘플 슬라이드 불러오기 버튼">
+        </a>
+        <figcaption><b>화면 2.</b> 불러오기 화면. 창 어디에나 파일을 <b>끌어다 놓아도</b> 열립니다. PDF는 페이지 수만큼 슬라이드가 생깁니다. <span class="no-print">(클릭하면 원본 크기)</span></figcaption>
+      </figure>
+
+      <div class="box note">
+        <span class="box-t">수정 레이어가 있으면 닫기 전에 한 번 물어봅니다</span>
+        <b>[작업 닫기]</b>는 지금 연 슬라이드와 수정 레이어를 모두 닫습니다. 저장하지 않은 수정이 있으면
+        <b>“현재 작업 중인 슬라이드와 수정 레이어를 모두 닫으시겠습니까?”</b> 확인 창이 먼저 뜹니다.
+      </div>
+    </section>
+
+    <!-- ═══════════════ 3. 실전 사용법 5단계 ═══════════════ -->
+    <section id="s3">
+      <div class="sec-head">
+        <div class="sec-num"><span>3</span></div>
+        <h2>실전 사용법 5단계</h2>
+      </div>
+
+      <!-- STEP 1 -->
+      <div class="step">
+        <div class="step-head">
+          <span class="step-badge">STEP 1</span>
+          <h3>파일 열기 — 이미지 한 장부터 다중 페이지 PDF까지</h3>
+        </div>
+        <p class="lead">고칠 슬라이드를 엽니다. PDF는 페이지마다 슬라이드가 되므로, 여러 장짜리 보고서도 한 번에 처리할 수 있습니다.</p>
+
+        <ol>
+          <li><b>[파일 열기]</b>를 누르거나 파일을 창에 끌어다 놓습니다. 여러 파일을 한 번에 골라도 됩니다.</li>
+          <li>PDF라면 <b>“PDF 변환 중 (3 / 12)…”</b>처럼 페이지별 진행률이 표시됩니다. 페이지는 고화질(2배 해상도) 이미지로 바뀝니다.</li>
+          <li>왼쪽 <b>슬라이드 목록</b>에 썸네일이 쌓입니다. 순서대로 고치고, 다 고친 뒤 <b>내보내기 → 전체 슬라이드 PDF</b>로 한 번에 묶습니다.</li>
+        </ol>
+
+        <div class="tbl-wrap keep">
+          <table>
+            <caption>표 4. 불러올 수 있는 파일</caption>
+            <thead>
+              <tr><th style="width:26%">형식</th><th style="width:26%">처리 방식</th><th>이럴 때</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>PNG · JPG · WebP</b></td><td>그대로 슬라이드 1장</td><td>카톡·메일로 받은 슬라이드 캡처, 회의 화면 캡처</td></tr>
+              <tr><td><b>PDF</b></td><td>페이지마다 슬라이드 1장으로 변환</td><td>다중 페이지 보고서·발표자료를 통째로 손볼 때</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step">
+        <div class="step-head">
+          <span class="step-badge">STEP 2</span>
+          <h3>깨진 줄을 드래그하면 수정 메뉴가 바로 열립니다</h3>
+        </div>
+        <p class="lead">핵심 동작은 하나입니다. <b>깨진 글자가 있는 줄을 사각형으로 감싸면</b> 끝입니다.</p>
+
+        <ol>
+          <li>하단이 <b>✏️ 선택</b> 모드인지 확인합니다(기본값).</li>
+          <li>깨진 글자를 <b>왼쪽 위 → 오른쪽 아래</b>로 드래그합니다. 점선 상자가 생기고 글자 인식이 시작됩니다.</li>
+          <li>손을 떼면 <b>수정 패널</b>과 <b>플로팅 퀵바</b>가 <b>열린 채로 유지</b>됩니다. 바로 글자를 고치거나 스타일을 다듬으세요.</li>
+          <li>인식이 끝나면 <b>“오프라인 OCR로 인식했습니다…”</b> 또는 <b>“AI 문맥 복원 완료!…”</b> 안내가 뜹니다.</li>
+        </ol>
+
+        <figure>
+          <a href="./assets/slidefix-03-select.png" target="_blank" rel="noopener">
+            <img src="./assets/slidefix-03-select.png" alt="샘플 슬라이드 제목 줄을 드래그해 점선 영역이 생기고, 플로팅 퀵바와 오른쪽 수정 패널이 열린 화면">
+          </a>
+          <figcaption><b>화면 3.</b> 제목 줄을 드래그한 직후. 점선 영역 위에 <b>AI 복원 · 자동맞춤 · 🧹 지우기 · 복제 · 삭제</b> 퀵바가 뜨고, 오른쪽에 <b>복원 텍스트</b>(OCR 결과)와 스타일 항목이 열립니다. <span class="no-print">(클릭하면 원본 크기)</span></figcaption>
+        </figure>
+
+        <div class="tbl-wrap keep">
+          <table>
+            <caption>표 5. 플로팅 퀵바의 다섯 버튼</caption>
+            <thead>
+              <tr><th style="width:18%">버튼</th><th>하는 일</th><th style="width:30%">이럴 때</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="chip chip-g">AI 복원</span></td><td>지금 선택한 영역을 다시 AI로 복원합니다.</td><td>OCR 결과가 엉뚱할 때 다시 시도</td></tr>
+              <tr><td><span class="chip chip-ui">자동맞춤</span></td><td>글자 크기를 영역에 맞춰 자동으로 줄입니다.</td><td>글자가 영역을 넘칠 때</td></tr>
+              <tr><td><span class="chip chip-ui">🧹 지우기</span></td><td>글자를 비우고 주변 배경색으로 덮습니다.</td><td>워터마크·불필요한 문구 지우기</td></tr>
+              <tr><td><span class="chip chip-ui">복제</span></td><td>같은 수정 영역을 하나 더 만듭니다.</td><td>같은 모양을 다른 위치에 반복</td></tr>
+              <tr><td><span class="chip chip-ui" style="background:#7f1d1d;">삭제</span></td><td>선택한 영역만 지웁니다(단축키 <span class="kbd">Delete</span>).</td><td>잘못 잡은 영역 취소</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="box warn">
+          <span class="box-t">점선 영역은 자동으로 커지지 않습니다 — 영역을 넉넉히 잡으세요</span>
+          자동 스타일 추정은 <b>드래그한 점선 상자(x·y·너비·높이)를 넓히거나 옮기지 않습니다.</b> 옆 줄을 침범하지 않게 하려는 규칙입니다.
+          그 대신 복원 문장이 길면 글자를 <b>추정 크기의 68%까지만</b> 줄이고, 그래도 넘치면 <b>영역 안에서 잘라</b> 그립니다.
+          그래서 <b>깨진 줄 전체 폭</b>을 감싸는 것이 좋습니다. 잘렸다면 영역을 다시 잡거나 <b>자동맞춤</b>·크기를 조정하세요.
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step">
+        <div class="step-head">
+          <span class="step-badge">STEP 3</span>
+          <h3>복원 텍스트와 스타일 다듬기</h3>
+        </div>
+        <p class="lead">오른쪽 <b>수정</b> 패널에서 글자와 모양을 마무리합니다. 자동 추정값이 처음부터 들어가 있으니, 어긋난 항목만 손보면 됩니다.</p>
+
+        <div class="tbl-wrap">
+          <table>
+            <caption>표 6. 수정 패널 항목 — 위에서 아래 순서</caption>
+            <thead>
+              <tr><th style="width:24%">항목</th><th>설명과 기본값</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>복원 텍스트</b></td><td>영역에 그릴 문장. OCR·AI 결과가 자동으로 채워집니다. 직접 입력해도 됩니다. 오른쪽 위 <b>[✓ 완료]</b>·<b>[AI 문맥 복원]</b> 버튼.</td></tr>
+              <tr><td><b>🧹 글자 지우기</b></td><td>글자를 모두 비우고 주변색으로 덮습니다(워터마크 제거).</td></tr>
+              <tr><td><b>한국어 폰트</b></td><td>10종 — Pretendard(기본) · Noto Sans KR · IBM Plex Sans KR · Nanum Gothic · Gowun Dodum · Noto Serif KR · Nanum Myeongjo · Do Hyeon · Black Han Sans · Jua.</td></tr>
+              <tr><td><b>크기 · 굵기</b></td><td>크기(px, 8~240)와 <b>[자동맞춤]</b>, 굵기 4단(보통 400 · 중간 500 · 굵게 700 · 아주 굵게 900).</td></tr>
+              <tr><td><b>글자 기울임 · 그림자</b></td><td>체크박스 두 개로 켜고 끕니다.</td></tr>
+              <tr><td><b>정렬</b></td><td>가로(좌·중·우), 세로(상·중·하).</td></tr>
+              <tr><td><b>줄간격 · 자간</b></td><td>슬라이더. 원본 줄 간격을 자동으로 되살립니다.</td></tr>
+              <tr><td><b>글자 색상</b></td><td>색상 선택기 + HEX 입력 + <b>스포이드</b>(캔버스에서 글자색 추출).</td></tr>
+              <tr><td><b>배경 지우기 방식</b></td><td><b>스마트 자동 복원</b>(단색/그라데이션) · <b>지정 단색 채우기</b> · <b>투명 배경</b>(글자만 얹기).</td></tr>
+              <tr><td><b>배경 색상</b></td><td>색상 선택기 + HEX + <b>[주변색 재추출]</b> + <b>스포이드</b>.</td></tr>
+              <tr><td><b>여백 확장 · 모서리 둥글기</b></td><td>덮어 그리는 사각형의 여백(0~20px)과 둥글기(0~24px).</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>스타일은 이렇게 추정됩니다 (자동값이 이상할 때 참고)</h4>
+        <ul>
+          <li><b>크기</b> — 영역 안 실제 글자 잉크의 한 줄 높이를 재서 역산하고, 줄 간격을 함께 봅니다.</li>
+          <li><b>굵기</b> — 잉크 밀도(글자 획이 차지하는 비율)를 400~800 후보와 비교해 가장 가까운 값을 고릅니다.</li>
+          <li><b>색</b> — 배경과 대비가 가장 큰 픽셀들의 대표색을 글자색으로 씁니다.</li>
+          <li><b>정렬</b> — 여러 줄의 가운데가 맞고 줄마다 폭이 다르면 <b>가운데 정렬</b>로 판단합니다.</li>
+          <li><b>배경</b> — 주변에서 <b>가장 많은 색 무리(mode)</b>로 채워 회색 띠가 생기지 않게 하고, 옅은 그라데이션도 판별합니다.</li>
+        </ul>
+
+        <div class="box tip">
+          <span class="box-t">스포이드 쓰는 법</span>
+          글자색·배경색 옆의 <b>스포이드 아이콘</b>을 누르면 위쪽에 <b>“스포이드: 색을 추출할 지점을 누르세요”</b> 띠가 뜹니다.
+          캔버스에서 원하는 지점을 클릭하면 그 색이 HEX로 들어가고, <span class="kbd">Esc</span>로 취소할 수 있습니다.
+        </div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="step">
+        <div class="step-head">
+          <span class="step-badge">STEP 4</span>
+          <h3>완료하고, 원본과 비교해 검수하기</h3>
+        </div>
+        <p class="lead">한 영역을 다 고쳤으면 <b>✓ 완료</b>로 점선을 숨기고, 다음 영역으로 넘어갑니다. 다 고친 뒤에는 원본과 나란히 확인하세요.</p>
+
+        <ol>
+          <li><b>[✓ 완료]</b>(패널 위쪽·아래쪽 모두) 또는 <span class="kbd">Esc</span>·캔버스 빈 곳 클릭으로 선택을 해제합니다.</li>
+          <li>왼쪽 <b>수정 레이어</b>에서 지금까지 고친 영역을 한눈에 봅니다. 필요 없는 줄은 <b>×</b>로 삭제합니다.</li>
+          <li>하단 <b>[영역 가이드]</b>를 켜면 화면의 모든 수정 영역이 점선으로 표시됩니다. <b>화면 전용</b>이라 저장·내보내기 결과물에는 들어가지 않습니다.</li>
+          <li><b>[원본 비교]</b>를 누르고 있는 동안(또는 <span class="kbd">Space</span>를 누르고 있는 동안) 원본이 보입니다. 손을 떼면 수정본으로 돌아옵니다.</li>
+          <li>잘못 고쳤다면 <span class="kbd">Ctrl</span>+<span class="kbd">Z</span>로 되돌립니다(최근 40단계).</li>
+        </ol>
+
+        <figure>
+          <a href="./assets/slidefix-04-restored.png" target="_blank" rel="noopener">
+            <img src="./assets/slidefix-04-restored.png" alt="두 곳을 복원한 뒤 영역 가이드를 켠 화면 — 제목과 카드 문구가 정상 한글로 바뀌고 점선 가이드가 표시됨">
+          </a>
+          <figcaption><b>화면 4.</b> 제목과 카드 문구 두 곳을 복원한 뒤 <b>[영역 가이드 ON]</b> 상태. 왼쪽 <b>수정 레이어 (2)</b>에 두 영역이 남아 있고, 아직 고치지 않은 ‘데□터’·‘작□’은 그대로 보입니다. <span class="no-print">(클릭하면 원본 크기)</span></figcaption>
+        </figure>
+
+        <div class="tbl-wrap keep">
+          <table>
+            <caption>표 7. 단축키 — 손이 마우스에 있을 때</caption>
+            <thead>
+              <tr><th style="width:30%">키</th><th>동작</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>드래그</b></td><td>새 수정 영역 만들기 + 글자 인식</td></tr>
+              <tr><td><b>빈 곳 클릭</b> / <span class="kbd">Esc</span></td><td>선택 해제(점선 숨김)</td></tr>
+              <tr><td><span class="kbd">Delete</span></td><td>선택한 영역만 삭제</td></tr>
+              <tr><td><b>방향키</b> / <span class="kbd">Shift</span>+<b>방향키</b></td><td>선택 영역을 1px / 10px씩 밀기</td></tr>
+              <tr><td><span class="kbd">Space</span> 길게</td><td>원본 슬라이드 보기(손을 떼면 복귀)</td></tr>
+              <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">Z</span> / <span class="kbd">Ctrl</span> + <span class="kbd">Y</span></td><td>실행 취소 / 다시 실행</td></tr>
+              <tr><td><span class="kbd">Ctrl</span> + <b>휠</b></td><td>마우스 위치를 기준으로 확대·축소</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- STEP 5 -->
+      <div class="step">
+        <div class="step-head">
+          <span class="step-badge">STEP 5</span>
+          <h3>내보내기 — PNG · JPG · PDF</h3>
+        </div>
+        <p class="lead">오른쪽 위 초록색 <b>[내보내기]</b>를 누르면 세 가지가 나옵니다.</p>
+
+        <div class="tbl-wrap keep">
+          <table>
+            <caption>표 8. 내보내기 세 가지와 저장 파일 이름</caption>
+            <thead>
+              <tr><th style="width:30%">메뉴</th><th style="width:32%">결과</th><th>파일 이름</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><b>현재 슬라이드 PNG</b><br><span style="font-size:12px;color:#64748b;">고화질</span></td><td>지금 슬라이드 한 장, <b>원본 해상도 그대로</b>(화면 확대·축소와 무관)</td><td><code>원본이름_fixed.png</code></td></tr>
+              <tr><td><b>현재 슬라이드 JPG</b><br><span style="font-size:12px;color:#64748b;">경량</span></td><td>같은 장을 가벼운 JPG로(품질 0.95)</td><td><code>원본이름_fixed.jpg</code></td></tr>
+              <tr><td><b>전체 슬라이드 PDF</b><br><span style="font-size:12px;color:#64748b;">다중 페이지</span></td><td>연 슬라이드 전부를 한 PDF로. 페이지마다 원본 비율·크기를 유지합니다.</td><td><code>SlideFix_Pro_Export.pdf</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>
+          작업을 며칠에 나눠 해야 한다면 <b>[프로젝트] → 작업 파일 저장 (.json)</b>으로 저장해 두세요.
+          파일 이름은 <code>SlideFix_Project.json</code>이고, <b>작업 파일 불러오기</b>로 그대로 이어서 작업할 수 있습니다.
+          슬라이드 이미지와 수정 레이어가 함께 담깁니다.
+        </p>
+
+        <div class="box note">
+          <span class="box-t">확대·이동은 저장 결과에 영향을 주지 않습니다</span>
+          화면 확대는 보기만 바꿉니다. 저장은 항상 원본 해상도로 다시 그리므로, 확대해서 픽셀을 확인하고 저장해도 결과는 같습니다.
+          확대 범위는 <b>15%~300%</b>이고, <b>[맞춤]</b>은 창 크기에 맞춰 자동으로 맞춥니다.
+          화면이 커서 일부가 잘려 보이면 <b>✋ 이동</b> 모드로 끌어 네 방향 끝까지 옮겨 볼 수 있습니다.
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ 4. AI 키 ═══════════════ -->
+    <section id="s4">
+      <div class="sec-head">
+        <div class="sec-num"><span>4</span></div>
+        <h2>AI 키와 오프라인 OCR — 무엇이 다른가요</h2>
+      </div>
+
+      <p>
+        AI는 <b>선택 사항</b>입니다. 키가 없어도 드래그 → 인식 → 수정 → 내보내기가 모두 됩니다.
+        다만 <b>문맥에 맞는 복원</b>과 <b>전체 자동 탐지</b>는 Gemini 키가 있어야 동작합니다.
+      </p>
+
+      <figure class="fig-portrait">
+        <a href="./assets/slidefix-05-aikey.png" target="_blank" rel="noopener">
+          <img src="./assets/slidefix-05-aikey.png" alt="Gemini API 키 등록 창 — API 키 입력란, AI 문맥 복원 사용 스위치, 키 삭제·취소·저장 버튼">
+        </a>
+        <figcaption><b>화면 5.</b> 상단 <b>[🔑 AI 키]</b> 창. 가운데 <b>AI 문맥 복원 사용</b> 스위치로 키를 지우지 않고 AI만 잠시 끌 수 있습니다. <span class="no-print">(클릭하면 원본 크기)</span></figcaption>
+      </figure>
+
+      <ol>
+        <li>상단 <b>[🔑 AI 키]</b> → <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>에서 발급한 키를 붙여 넣고 <b>[저장]</b>.</li>
+        <li>저장하면 <b>AI 사용이 켜진 상태</b>가 되고, 상단 버튼이 <b>“AI 사용”</b>과 <b>초록 점</b>으로 바뀌습니다.</li>
+        <li>AI만 잠시 끄려면 같은 창의 <b>AI 문맥 복원 사용</b> 스위치를 내립니다. 키는 그대로 보관되고 오프라인 OCR로 동작하며, 상단 버튼이 <b>“AI 꺼짐”(노란 점)</b>으로 표시됩니다.</li>
+        <li>키를 지우려면 <b>[키 삭제]</b>. 이후로는 오프라인 OCR만 씁니다.</li>
+      </ol>
+
+      <div class="tbl-wrap keep">
+        <table>
+          <caption>표 9. 키와 데이터가 어디로 가는가</caption>
+          <thead>
+            <tr><th style="width:30%">항목</th><th>내용</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><b>키 보관 위치</b></td><td>이 브라우저의 <code>localStorage</code> — 항목 이름 <code>slidefix_gemini_key</code>. 서버에 저장하는 곳은 없습니다.</td></tr>
+            <tr><td><b>외부로 나가는 것</b></td><td>① 키를 등록했고 AI가 켜져 있을 때의 <b>복원·자동 탐지 요청</b>(영역 이미지 + 문맥) ② 화면을 그리는 <b>CDN 라이브러리·폰트</b>. 그 밖에는 없습니다.</td></tr>
+            <tr><td><b>나가지 않는 것</b></td><td>슬라이드 원본 파일과 편집 결과. 변환·편집·내보내기는 모두 브라우저 안에서 이뤄집니다.</td></tr>
+            <tr><td><b>공용 PC</b></td><td>키를 등록하지 마세요. 등록했다면 쓰고 나서 <b>[키 삭제]</b>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="box tip">
+        <span class="box-t">전체 자동 탐지는 이렇게 동작합니다</span>
+        슬라이드를 통째로 Gemini Vision에 보내 <b>깨진 글자가 있는 줄</b>을 찾고, 찾은 곳마다 수정 영역을 만들어 <b>복원 문장까지 채워</b> 둡니다.
+        실행 전에 확인 창이 뜨고(키가 없거나 AI가 꺼져 있으면 먼저 물어봅니다), 끝나면 <b>“N개의 깨진 글자 영역을 자동 복원했습니다!”</b> 안내가 나옵니다.
+        자동으로 잡힌 영역도 사람이 한 번 훑어보고 어긋난 곳만 고치는 것이 가장 빠릅니다.
+      </div>
+    </section>
+
+    <!-- ═══════════════ 5. 한계·주의 ═══════════════ -->
+    <section id="s5">
+      <div class="sec-head">
+        <div class="sec-num"><span>5</span></div>
+        <h2>한계·주의사항·자주 묻는 질문</h2>
+      </div>
+
+      <h3>① 먼저 알아 두실 한계</h3>
+      <div class="tbl-wrap keep">
+        <table>
+          <caption>표 10. 한계와 대응</caption>
+          <thead>
+            <tr><th style="width:32%">한계</th><th>대응</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>글자를 <b>덧그리는</b> 방식이라 원본 폰트와 100% 같지 않을 수 있습니다.</td><td>폰트·크기·색을 패널에서 미세 조정하고, <b>원본 비교</b>로 확인하세요. 확대해서 보면 차이가 보입니다.</td></tr>
+            <tr><td>사진을 찍은 슬라이드처럼 <b>기울거나 흐린</b> 이미지는 인식률이 떨어집니다.</td><td>영역을 좁게 잡고, 안 되면 <b>직접 입력</b>. 가능하면 원본 캡처·PDF를 쓰세요.</td></tr>
+            <tr><td>복잡한 배경(사진·강한 그라데이션) 위에서는 덮은 자리가 미세하게 보일 수 있습니다.</td><td><b>배경 지우기 방식</b>을 ‘지정 단색’으로 바꾸고 <b>스포이드</b>로 주변색을 찍어 채우세요.</td></tr>
+            <tr><td>긴 문장을 좁은 영역에 넣으면 <b>잘리거나 작아집니다</b>(68% 하한 규칙).</td><td>줄 전체 폭을 영역으로 잡고, 필요하면 <b>[자동맞춤]</b> 또는 크기 조정.</td></tr>
+            <tr><td>새로고침하면 <b>작업 내용이 사라집니다</b>(자동 저장 없음).</td><td>중간에 <b>[프로젝트] → 작업 파일 저장</b>으로 JSON을 남기세요.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>② 자주 묻는 질문</h3>
+
+      <div class="faq">
+        <p class="q"><span>Q1.</span>드래그했는데 엉뚱한 글자가 나옵니다.</p>
+        <p class="a">깨진 글자는 OCR이 가장 어려워하는 대상입니다. ① 패널의 <b>복원 텍스트</b>를 직접 고치거나 ② <b>[AI 문맥 복원]</b>(키 필요)을 쓰거나
+        ③ 영역을 그 줄 폭에 맞게 다시 잡아 보세요. 화면 3의 OCR 결과처럼 일부 글자가 바뀌어 나오는 것은 정상 동작이며, 마지막 확인은 사람이 합니다.</p>
+      </div>
+
+      <div class="faq">
+        <p class="q"><span>Q2.</span>복원한 글자가 영역 밖으로 잘려 보입니다.</p>
+        <p class="a">선택 영역은 자동으로 넓어지지 않기 때문입니다. 글자가 <b>영역 안에서 잘리거나 68%까지 줄어듭니다.</b>
+        영역을 다시 잡아 <b>문장 전체 폭</b>을 감싸거나, 크기를 줄이고 <b>[자동맞춤]</b>을 눌러 보세요.</p>
+      </div>
+
+      <div class="faq">
+        <p class="q"><span>Q3.</span>덮은 자리에 회색 띠가 보입니다.</p>
+        <p class="a">배경색 추정이 어긋난 경우입니다. <b>배경 지우기 방식</b>을 <b>지정 단색 채우기</b>로 바꾸고 <b>[주변색 재추출]</b> 또는 <b>스포이드</b>로 정확한 색을 찍어 주세요.
+        여백 확장 값을 0에 가깝게 줄이면 경계가 덜 보입니다.</p>
+      </div>
+
+      <div class="faq">
+        <p class="q"><span>Q4.</span>PDF 여러 장을 한 번에 고치고 싶습니다.</p>
+        <p class="a">PDF를 열면 <b>페이지마다 슬라이드</b>가 생깁니다. 페이지를 옮겨 가며 고친 뒤 <b>[내보내기] → 전체 슬라이드 PDF</b>로 한 파일로 저장하세요.
+        페이지 크기가 서로 다른 PDF도 각 페이지 비율을 유지해 묶입니다.</p>
+      </div>
+
+      <div class="faq">
+        <p class="q"><span>Q5.</span>AI 키를 넣었는데 자동 탐지가 실행되지 않습니다.</p>
+        <p class="a">키 창의 <b>AI 문맥 복원 사용</b> 스위치가 꺼져 있으면 확인 창이 먼저 뜹니다(켜고 실행 여부를 물음).
+        <b>“AI 키가 유효하지 않습니다”</b>가 나오면 키 값·권한 문제이니 Google AI Studio에서 키를 다시 확인하세요.</p>
+      </div>
+
+      <div class="faq">
+        <p class="q"><span>Q6.</span>모바일·태블릿에서도 쓸 수 있나요?</p>
+        <p class="a">됩니다. 다만 손가락은 <b>화면 이동</b>에 쓰이므로, 하단에서 <b>✋ 이동</b> 모드로 옮겨 다니고 <b>✏️ 선택</b> 모드에서 펜으로 영역을 잡는 흐름이 편합니다.
+        정밀한 스타일 조정은 PC 화면(넓은 패널)에서 하는 것이 빠릅니다.</p>
+      </div>
+
+      <h3>③ 더 빨라지는 세 가지 습관</h3>
+      <ul>
+        <li><b>한 줄 = 한 영역.</b> 여러 줄을 한 번에 감싸면 스타일 추정이 흔들립니다.</li>
+        <li>먼저 <b>[AI 자동 탐지]</b>로 후보를 뽑고, 빠진 곳만 손으로 드래그하면 대부분 한 번에 끝납니다.</li>
+        <li>저장 전에는 꼭 <b>[원본 비교]</b>를 <b>누른 채로</b> 훑어보세요. 틀어진 자리가 눈에 바로 들어옵니다.</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p><b>SlideFix Pro — 사용설명서</b> <span style="color:#1d4ed8;font-weight:700;">v1.0</span></p>
+      <p>화면 캡처 5장은 2026년 11월 27일 실서비스(<b>https://sliderfix-pro.vercel.app/</b>, 2026-11-26 배포본)를 PC 1280×800에서 직접 조작해 찍은 것입니다.</p>
+      <p>대상 기능 — 이미지·PDF 불러오기 · 드래그 영역 지정과 좌표 고정 · 스타일 근사 추정 · AI 복원 ON/OFF · 오프라인 OCR · 스포이드 · 배경 3방식 · 영역 가이드 · 원본 비교 · PNG/JPG/PDF 내보내기 · 프로젝트 JSON.</p>
+      <p><b>v1.0 작성(2026.11.27)</b> — 최초 작성. 배포 전 검토본이며, 각 앱의 <b>guide.html</b>로 옮길 때 이미지 경로는 <code>./assets/</code> 기준입니다.</p>
+    </footer>
+
+  </div><!-- /.wrap -->
+</div><!-- /.page -->
+
+<script>
+  function closeWindow(){
+    // 앱 내 iframe 모달로 열린 경우: 부모 창에 닫기 요청
+    if(window.parent && window.parent !== window){
+      try{ window.parent.postMessage({type:'slidefix-guide-close'}, '*'); }catch(e){}
+      return;
+    }
+    window.close();
+    setTimeout(function(){
+      if(!window.closed && document.body){
+        var t=document.createElement('div');
+        t.textContent='이 창은 브라우저가 직접 연 탭이라 스스로 닫을 수 없습니다. 탭을 닫아 주세요.';
+        t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#0f172a;color:#fff;font-size:13px;padding:10px 16px;border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.3);z-index:99;max-width:90%;';
+        document.body.appendChild(t);
+        setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); },4000);
+      }
+    },300);
+  }
+</script>
+</body>
+</html>
