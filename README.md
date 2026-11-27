@@ -8,6 +8,8 @@
 
 설치 없이 브라우저에서 바로 실행되는 단일 HTML 앱입니다.
 
+📖 **[사용설명서](https://sliderfix-pro.vercel.app/guide.html)** — 앱 상단 **📖 사용설명서** 버튼으로도 바로 열립니다.
+
 </div>
 
 ---
